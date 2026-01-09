@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบลาข้าราชการครู</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="spinner"></div>
+        <p>กำลังโหลด...</p>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="screen">
+        <div class="login-container">
+            <div class="login-header">
+                <h1>🏫 ระบบลาข้าราชการครู</h1>
+                <p>กรุณาเข้าสู่ระบบ</p>
+            </div>
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="loginEmail">อีเมล</label>
+                    <input type="email" id="loginEmail" required placeholder="example@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">รหัสผ่าน</label>
+                    <input type="password" id="loginPassword" required placeholder="รหัสผ่าน">
+                </div>
+                <button type="submit" class="btn btn-primary">เข้าสู่ระบบ</button>
+            </form>
+            <div class="login-footer">
+                <p>ระบบสำหรับข้าราชการครูเท่านั้น</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Screen -->
+    <div id="appScreen" class="screen" style="display: none;">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1>🏫 ระบบลาข้าราชการครู</h1>
+                <div class="user-info">
+                    <span id="userName">ผู้ใช้งาน</span>
+                    <span id="userRole" class="role-badge">ครู</span>
+                    <button id="logoutBtn" class="btn btn-secondary">ออกจากระบบ</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="leave-balance">วันลาคงเหลือ</button>
+            <button class="nav-tab" data-tab="request-leave">ยื่นคำขอลา</button>
+            <button class="nav-tab" data-tab="my-requests">คำขอของฉัน</button>
+            <button class="nav-tab" data-tab="pending-approvals" id="approvalsTab" style="display: none;">รออนุมัติ</button>
+            <button class="nav-tab" data-tab="import-users" id="importTab" style="display: none;">นำเข้าข้อมูล</button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Leave Balance Tab -->
+            <div id="leave-balance" class="tab-content active">
+                <h2>วันลาคงเหลือ ประจำปี <span id="currentYear"></span></h2>
+                <div class="balance-cards">
+                    <div class="balance-card">
+                        <div class="balance-icon">🏖️</div>
+                        <h3>ลาพักผ่อน</h3>
+                        <div class="balance-number" id="annualBalance">0</div>
+                        <p>วัน</p>
+                    </div>
+                    <div class="balance-card">
+                        <div class="balance-icon">🤒</div>
+                        <h3>ลาป่วย</h3>
+                        <div class="balance-number" id="sickBalance">0</div>
+                        <p>วัน</p>
+                    </div>
+                    <div class="balance-card">
+                        <div class="balance-icon">📋</div>
+                        <h3>ลากิจ</h3>
+                        <div class="balance-number" id="personalBalance">0</div>
+                        <p>วัน</p>
+                    </div>
+                    <div class="balance-card">
+                        <div class="balance-icon">👶</div>
+                        <h3>ลาคลอด</h3>
+                        <div class="balance-number" id="maternityBalance">90</div>
+                        <p>วัน</p>
+                    </div>
+                </div>
+
+                <!-- Leave Summary -->
+                <div class="summary-section">
+                    <h3>สรุปการลาในปีนี้</h3>
+                    <div id="leaveSummary" class="summary-grid">
+                        <div class="summary-item">
+                            <span>รวมวันที่ลาไปแล้ว:</span>
+                            <strong id="totalUsed">0 วัน</strong>
+                        </div>
+                        <div class="summary-item">
+                            <span>รอการอนุมัติ:</span>
+                            <strong id="totalPending">0 วัน</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Request Leave Tab -->
+            <div id="request-leave" class="tab-content">
+                <h2>ยื่นคำขอลา</h2>
+                <div class="notice-box" id="leaveNotice">
+                    <strong>📌 หมายเหตุ:</strong>
+                    <ul>
+                        <li>การลากิจต้องยื่นคำขอล่วงหน้าอย่างน้อย 3 วัน</li>
+                        <li>การลาป่วยต้องแจ้งก่อน 08:00 น. ของวันนั้น</li>
+                        <li>กรณีเร่งด่วนนอกเหนือจากเงื่อนไข กรุณาติดต่อเจ้าหน้าที่โดยตรง</li>
+                    </ul>
+                </div>
+                
+                <form id="leaveRequestForm" class="leave-form">
+                    <div class="form-group">
+                        <label for="leaveType">ประเภทการลา *</label>
+                        <select id="leaveType" required>
+                            <option value="">-- เลือกประเภทการลา --</option>
+                            <option value="annual">ลาพักผ่อน</option>
+                            <option value="sick">ลาป่วย</option>
+                            <option value="personal">ลากิจ</option>
+                            <option value="maternity">ลาคลอด</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="startDate">วันที่เริ่มต้น *</label>
+                            <input type="date" id="startDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="endDate">วันที่สิ้นสุด *</label>
+                            <input type="date" id="endDate" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="totalDays">จำนวนวัน</label>
+                        <input type="number" id="totalDays" readonly value="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reason">เหตุผลการลา *</label>
+                        <textarea id="reason" required rows="4" placeholder="กรุณาระบุเหตุผลการลา..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contactDuringLeave">ที่อยู่ที่สามารถติดต่อได้ขณะลา</label>
+                        <textarea id="contactDuringLeave" rows="2" placeholder="ที่อยู่หรือเบอร์โทรศัพท์..."></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">ยื่นคำขอลา</button>
+                        <button type="button" id="resetForm" class="btn btn-secondary">ล้างฟอร์ม</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- My Requests Tab -->
+            <div id="my-requests" class="tab-content">
+                <h2>คำขอลาของฉัน</h2>
+                <div class="filter-section">
+                    <select id="statusFilter">
+                        <option value="all">ทั้งหมด</option>
+                        <option value="pending">รอพิจารณา</option>
+                        <option value="approved">อนุมัติ</option>
+                        <option value="rejected">ไม่อนุมัติ</option>
+                    </select>
+                </div>
+                <div id="requestsList" class="requests-list">
+                    <div class="empty-state">
+                        <p>ไม่มีคำขอลา</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Approvals Tab (Manager Only) -->
+            <div id="pending-approvals" class="tab-content">
+                <h2>คำขอที่รอพิจารณา</h2>
+                <div id="pendingList" class="requests-list">
+                    <div class="empty-state">
+                        <p>ไม่มีคำขอที่รอพิจารณา</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Import Users Tab (Admin Only) -->
+            <div id="import-users" class="tab-content">
+                <h2>นำเข้าข้อมูลครู</h2>
+                <div class="import-section">
+                    <div class="info-box">
+                        <h3>📋 รูปแบบไฟล์ CSV</h3>
+                        <p>ไฟล์ต้องมีคอลัมน์ดังนี้:</p>
+                        <code>name,email,password,position,department</code>
+                        <p><strong>ตัวอย่าง:</strong></p>
+                        <code>สมชาย ใจดี,somchai@school.ac.th,password123,ครู,ภาษาไทย</code>
+                        <button id="downloadTemplate" class="btn btn-secondary">ดาวน์โหลดไฟล์ตัวอย่าง</button>
+                    </div>
+
+                    <div class="upload-section">
+                        <input type="file" id="csvFile" accept=".csv" style="display: none;">
+                        <button id="selectFile" class="btn btn-primary">เลือกไฟล์ CSV</button>
+                        <span id="fileName" class="file-name"></span>
+                        <button id="importUsers" class="btn btn-success" disabled>นำเข้าข้อมูล</button>
+                    </div>
+
+                    <div id="importResults" class="import-results"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for Approval -->
+    <div id="approvalModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>พิจารณาคำขอลา</h2>
+            <div id="modalRequestDetails"></div>
+            <div class="form-group">
+                <label for="reviewComment">หมายเหตุ</label>
+                <textarea id="reviewComment" rows="3" placeholder="ระบุหมายเหตุ (ถ้าไม่อนุมัติ)..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button id="approveBtn" class="btn btn-success">✓ อนุมัติ</button>
+                <button id="rejectBtn" class="btn btn-danger">✗ ไม่อนุมัติ</button>
+                <button id="cancelBtn" class="btn btn-secondary">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Firebase SDK -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
