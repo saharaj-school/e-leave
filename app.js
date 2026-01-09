@@ -5,13 +5,13 @@ import { getFirestore, collection, addDoc, doc, getDoc, getDocs, updateDoc, quer
 
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyCFyb7qu110Nt2_MhRXK-AlSvu1Hhg2cJU",
-    authDomain: "e-leave-service.firebaseapp.com",
-    projectId: "e-leave-service",
-    storageBucket: "e-leave-service.firebasestorage.app",
-    messagingSenderId: "936880215366",
-    appId: "1:936880215366:web:dbd883b0ce4b03df4ec147",
-    measurementId: "G-N2Y7J3P6MP"
+  apiKey: "AIzaSyCFyb7qu110Nt2_MhRXK-AlSvu1Hhj2cJU",
+  authDomain: "e-leave-service.firebaseapp.com",
+  projectId: "e-leave-service",
+  storageBucket: "e-leave-service.firebasestorage.app",
+  messagingSenderId: "936880215366",
+  appId: "1:936880215366:web:dbd883b0ce4b03df4ec147",
+  measurementId: "G-N2Y7J3P6MP"
 };
 
 // Initialize Firebase
