@@ -15,9 +15,20 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+console.log('🔥 กำลังเชื่อมต่อ Firebase...');
+console.log('📁 Project ID:', firebaseConfig.projectId);
+
+let app, auth, db;
+
+try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    console.log('✅ Firebase เชื่อมต่อสำเร็จ!');
+} catch (error) {
+    console.error('❌ Firebase initialization error:', error);
+    alert('ไม่สามารถเชื่อมต่อ Firebase ได้: ' + error.message + '\n\nกรุณาตรวจสอบ:\n1. เปิดใช้งาน Authentication (Email/Password)\n2. สร้าง Firestore Database\n3. อัพโหลด Security Rules');
+}
 
 // Global variables
 let currentUser = null;
@@ -49,18 +60,51 @@ const toast = document.getElementById('toast');
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 เริ่มต้นแอปพลิเคชัน');
+    
     setupEventListeners();
+    
+    // Set timeout to hide loading screen if Firebase doesn't respond
+    const loadingTimeout = setTimeout(() => {
+        console.error('⏰ Firebase ไม่ตอบสนองภายใน 10 วินาที');
+        hideLoading();
+        showLogin();
+        showToast('กรุณารอสักครู่แล้วลองใหม่อีกครั้ง', 'warning');
+    }, 10000); // 10 seconds timeout
     
     // Monitor auth state
     onAuthStateChanged(auth, async (user) => {
+        clearTimeout(loadingTimeout);
+        console.log('✅ Firebase Auth พร้อมใช้งาน');
+        
         if (user) {
+            console.log('👤 ผู้ใช้: ', user.email);
             currentUser = user;
-            await loadUserData();
-            showApp();
+            try {
+                await loadUserData();
+                showApp();
+            } catch (error) {
+                console.error('❌ Error loading user data:', error);
+                showToast('เกิดข้อผิดพลาด: ' + error.message, 'error');
+                await signOut(auth);
+                showLogin();
+            }
         } else {
+            console.log('👤 ไม่มีผู้ใช้ล็อกอิน (ปกติ)');
             showLogin();
         }
         hideLoading();
+    }, (error) => {
+        clearTimeout(loadingTimeout);
+        console.error('❌ Firebase Auth Error:', error);
+        hideLoading();
+        showLogin();
+        
+        if (error.code === 'auth/api-key-not-valid') {
+            showToast('Firebase API Key ไม่ถูกต้อง กรุณาติดต่อผู้ดูแลระบบ', 'error');
+        } else {
+            showToast('เกิดข้อผิดพลาด: ' + error.message, 'error');
+        }
     });
 });
 
