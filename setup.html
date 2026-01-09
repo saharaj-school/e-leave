@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตั้งค่าระบบ - ล้างข้อมูลและสร้าง Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@300;400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Bai Jamjuree', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 50px;
+            border-radius: 24px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: #1e293b;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 40px;
+        }
+
+        .section {
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+        }
+
+        .section h2 {
+            font-size: 1.4rem;
+            color: #1e293b;
+            margin-bottom: 15px;
+        }
+
+        .section p {
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Bai Jamjuree', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-family: 'Bai Jamjuree', sans-serif;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+
+        .alert.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .spinner {
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #dbeafe;
+            border-left: 4px solid #2563eb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            color: #1e40af;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 ตั้งค่าระบบ</h1>
+        <p class="subtitle">ล้างข้อมูลและสร้างบัญชี Admin</p>
+
+        <div id="alertBox" class="alert"></div>
+        <div id="loadingDiv" class="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 15px; color: #64748b;">กำลังดำเนินการ...</p>
+        </div>
+
+        <!-- Section 1: Clear All Data -->
+        <div class="section">
+            <h2>🗑️ ล้างข้อมูลทั้งหมด</h2>
+            <p>ลบข้อมูลทั้งหมดในระบบ (ผู้ใช้, การลา) เพื่อเริ่มต้นใหม่</p>
+            <button class="btn btn-danger" onclick="clearAllData()">🗑️ ล้างข้อมูลทั้งหมด</button>
+            <div class="info-box">
+                ⚠️ <strong>คำเตือน:</strong> การกระทำนี้ไม่สามารถย้อนกลับได้!
+            </div>
+        </div>
+
+        <!-- Section 2: Create Admin Account -->
+        <div class="section">
+            <h2>👑 สร้างบัญชี Admin</h2>
+            <form id="createAdminForm">
+                <div class="form-group">
+                    <label>ชื่อ-นามสกุล Admin</label>
+                    <input type="text" id="adminName" placeholder="เช่น ผู้อำนวยการ วิชาชีพ" required>
+                </div>
+                <div class="form-group">
+                    <label>ชื่อผู้ใช้ (Username)</label>
+                    <input type="text" id="adminUsername" placeholder="เช่น admin" required pattern="[a-zA-Z0-9_]+">
+                </div>
+                <div class="form-group">
+                    <label>รหัสผ่าน (Password)</label>
+                    <input type="password" id="adminPassword" placeholder="อย่างน้อย 6 ตัวอักษร" required minlength="6">
+                </div>
+                <button type="submit" class="btn btn-primary">👑 สร้างบัญชี Admin</button>
+            </form>
+        </div>
+
+        <!-- Section 3: Quick Setup -->
+        <div class="section">
+            <h2>⚡ ตั้งค่าด่วน</h2>
+            <p>ล้างข้อมูลและสร้าง Admin เริ่มต้นในคลิกเดียว</p>
+            <button class="btn btn-success" onclick="quickSetup()">⚡ ตั้งค่าอัตโนมัติ</button>
+            <div class="info-box">
+                ℹ️ จะสร้าง Admin: <strong>admin/admin123</strong>
+            </div>
+        </div>
+
+        <div class="links">
+            <a href="login.html">🎓 หน้าเข้าสู่ระบบครู</a> |
+            <a href="admin-login.html">🔐 หน้าเข้าสู่ระบบ Admin</a>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, deleteDoc, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCFyb7qu110Nt2_MhRXK-AlSvu1Hhj2cJU",
+            authDomain: "e-leave-service.firebaseapp.com",
+            projectId: "e-leave-service",
+            storageBucket: "e-leave-service.firebasestorage.app",
+            messagingSenderId: "936880215366",
+            appId: "1:936880215366:web:dbd883b0ce4b03df4ec147",
+            measurementId: "G-N2Y7J3P6MP"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const analytics = getAnalytics(app);
+
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.textContent = message;
+            alertBox.className = `alert ${type} show`;
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 5000);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingDiv').style.display = show ? 'block' : 'none';
+        }
+
+        // Clear all data
+        window.clearAllData = async function() {
+            if (!confirm('⚠️ คุณแน่ใจหรือไม่ที่จะลบข้อมูลทั้งหมด?\n\nการกระทำนี้จะลบ:\n- ผู้ใช้ทั้งหมด (รวม Admin)\n- การลาทั้งหมด\n\nและไม่สามารถย้อนกลับได้!')) {
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                // Delete all users
+                const usersSnapshot = await getDocs(collection(db, 'users'));
+                const deleteUserPromises = [];
+                usersSnapshot.forEach((docSnapshot) => {
+                    deleteUserPromises.push(deleteDoc(doc(db, 'users', docSnapshot.id)));
+                });
+                await Promise.all(deleteUserPromises);
+
+                // Delete all leaves
+                const leavesSnapshot = await getDocs(collection(db, 'leaves'));
+                const deleteLeavePromises = [];
+                leavesSnapshot.forEach((docSnapshot) => {
+                    deleteLeavePromises.push(deleteDoc(doc(db, 'leaves', docSnapshot.id)));
+                });
+                await Promise.all(deleteLeavePromises);
+
+                showLoading(false);
+                showAlert('✅ ล้างข้อมูลทั้งหมดเรียบร้อยแล้ว!', 'success');
+            } catch (error) {
+                console.error('Error clearing data:', error);
+                showLoading(false);
+                showAlert('❌ เกิดข้อผิดพลาด: ' + error.message, 'error');
+            }
+        };
+
+        // Create admin account
+        document.getElementById('createAdminForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('adminName').value.trim();
+            const username = document.getElementById('adminUsername').value.trim();
+            const password = document.getElementById('adminPassword').value;
+
+            if (!name || !username || !password) {
+                showAlert('⚠️ กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+                return;
+            }
+
+            if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                showAlert('⚠️ ชื่อผู้ใช้ต้องเป็นตัวอักษร a-z, A-Z, 0-9 และ _ เท่านั้น', 'error');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const adminData = {
+                    name: name,
+                    username: username,
+                    password: password,
+                    role: 'admin',
+                    createdAt: new Date().toISOString()
+                };
+
+                const adminId = 'admin_' + Date.now();
+                await setDoc(doc(db, 'users', adminId), adminData);
+
+                showLoading(false);
+                showAlert(`✅ สร้างบัญชี Admin เรียบร้อยแล้ว!\n\nชื่อผู้ใช้: ${username}\nรหัสผ่าน: ${password}`, 'success');
+                
+                this.reset();
+            } catch (error) {
+                console.error('Error creating admin:', error);
+                showLoading(false);
+                showAlert('❌ เกิดข้อผิดพลาด: ' + error.message, 'error');
+            }
+        });
+
+        // Quick setup
+        window.quickSetup = async function() {
+            if (!confirm('ต้องการตั้งค่าอัตโนมัติใช่หรือไม่?\n\n- ลบข้อมูลทั้งหมด\n- สร้าง Admin (admin/admin123)')) {
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                // Clear all data
+                const usersSnapshot = await getDocs(collection(db, 'users'));
+                for (const docSnapshot of usersSnapshot.docs) {
+                    await deleteDoc(doc(db, 'users', docSnapshot.id));
+                }
+
+                const leavesSnapshot = await getDocs(collection(db, 'leaves'));
+                for (const docSnapshot of leavesSnapshot.docs) {
+                    await deleteDoc(doc(db, 'leaves', docSnapshot.id));
+                }
+
+                // Create default admin
+                const adminData = {
+                    name: 'ผู้ดูแลระบบ',
+                    username: 'admin',
+                    password: 'admin123',
+                    role: 'admin',
+                    createdAt: new Date().toISOString()
+                };
+
+                await setDoc(doc(db, 'users', 'admin_001'), adminData);
+
+                showLoading(false);
+                showAlert('✅ ตั้งค่าเรียบร้อยแล้ว!\n\nAdmin: admin / admin123\n\nสามารถเข้าสู่ระบบได้ทันที', 'success');
+            } catch (error) {
+                console.error('Error in quick setup:', error);
+                showLoading(false);
+                showAlert('❌ เกิดข้อผิดพลาด: ' + error.message, 'error');
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการการลา - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@300;400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --shadow: rgba(15, 23, 42, 0.08);
+        }
+
+        body {
+            font-family: 'Bai Jamjuree', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 150%;
+            height: 150%;
+            background: radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: floatBg 30s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes floatBg {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-100px, -100px) rotate(360deg); }
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 30px 20px;
+            border-right: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 4px 0 30px var(--shadow);
+            z-index: 1000;
+            overflow-y: auto;
+            animation: slideInLeft 0.6s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .nav-item {
+            padding: 15px 20px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            transform: translateX(5px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .nav-icon {
+            font-size: 1.4rem;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            padding: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .top-bar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 25px 35px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 40px var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .admin-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .stat-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+
+        .stat-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 60px var(--shadow);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: fadeInUp 1s ease-out 0.4s both;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Bai Jamjuree', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--bg);
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text);
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 18px 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:hover {
+            background: var(--bg);
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            color: var(--text);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Bai Jamjuree', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+            justify-content: flex-end;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: 'Bai Jamjuree', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-light);
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab:hover {
+            color: var(--primary);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .personnel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .personnel-card {
+            background: var(--bg);
+            padding: 25px;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .personnel-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px var(--shadow);
+        }
+
+        .personnel-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .personnel-position {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .personnel-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .personnel-stat {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .personnel-stat-value {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .personnel-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.6rem;
+            }
+
+            .stats-overview {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 25px;
+            }
+
+            .modal-content {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">🎓 Admin Panel</div>
+        <nav>
+            <div class="nav-item active" onclick="switchTab('dashboard')">
+                <span class="nav-icon">📊</span>
+                <span>แดชบอร์ด</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('approvals')">
+                <span class="nav-icon">✅</span>
+                <span>อนุมัติการลา</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('personnel')">
+                <span class="nav-icon">👥</span>
+                <span>จัดการบุคลากร</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('reports')">
+                <span class="nav-icon">📈</span>
+                <span>รายงานสรุป</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('settings')">
+                <span class="nav-icon">⚙️</span>
+                <span>ตั้งค่า</span>
+            </div>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <h1 class="page-title" id="pageTitle">แดชบอร์ด</h1>
+            <div class="admin-info">
+                <div class="admin-avatar">ผ</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 1.05rem;">ผู้อำนวยการ วิชาชีพ</div>
+                    <div style="font-size: 0.9rem; color: var(--text-light);">ผู้ดูแลระบบ</div>
+                </div>
+                <button onclick="logout()" style="margin-left: 15px; padding: 10px 20px; background: white; border: 2px solid var(--border); border-radius: 10px; color: var(--text); cursor: pointer; font-family: 'Bai Jamjuree', sans-serif; font-weight: 600; transition: all 0.3s ease;">
+                    🚪 ออกจากระบบ
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="stats-overview">
+                <div class="stat-box">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-number">48</div>
+                    <div class="stat-label">บุคลากรทั้งหมด</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon">📝</div>
+                    <div class="stat-number">12</div>
+                    <div class="stat-label">รออนุมัติ</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-number">156</div>
+                    <div class="stat-label">อนุมัติแล้ว (เดือนนี้)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">ลาวันนี้</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">🚨 คำขอที่รอดำเนินการ</h2>
+                </div>
+                <div class="table-container">
+                    <table id="pendingRequestsTable">
+                        <thead>
+                            <tr>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>ประเภท</th>
+                                <th>วันที่</th>
+                                <th>จำนวนวัน</th>
+                                <th>สถานะ</th>
+                                <th>การดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>สมชาย ใจดี</strong></td>
+                                <td>ลากิจ</td>
+                                <td>15 - 16 ม.ค. 68</td>
+                                <td>2 วัน</td>
+                                <td><span class="status-badge status-pending">รออนุมัติ</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-success" onclick="approveLeave(this)">✓ อนุมัติ</button>
+                                        <button class="btn btn-danger" onclick="rejectLeave(this)">✗ ไม่อนุมัติ</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>สมศรี วงศ์ดี</strong></td>
+                                <td>ลาป่วย</td>
+                                <td>10 ม.ค. 68</td>
+                                <td>1 วัน</td>
+                                <td><span class="status-badge status-pending">รออนุมัติ</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-success" onclick="approveLeave(this)">✓ อนุมัติ</button>
+                                        <button class="btn btn-danger" onclick="rejectLeave(this)">✗ ไม่อนุมัติ</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approvals Tab -->
+        <div id="approvals" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">✅ จัดการการอนุมัติ</h2>
+                </div>
+                
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <input type="text" placeholder="ค้นหาชื่อบุคลากร..." onkeyup="filterApprovals(this.value)">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                    <select onchange="filterByStatus(this.value)" style="width: auto; min-width: 180px;">
+                        <option value="all">สถานะทั้งหมด</option>
+                        <option value="pending">รออนุมัติ</option>
+                        <option value="approved">อนุมัติแล้ว</option>
+                        <option value="rejected">ไม่อนุมัติ</option>
+                    </select>
+                    <select style="width: auto; min-width: 180px;">
+                        <option value="all">ประเภททั้งหมด</option>
+                        <option value="sick">ลาป่วย</option>
+                        <option value="personal">ลากิจ</option>
+                        <option value="vacation">ลาพักผ่อน</option>
+                    </select>
+                </div>
+
+                <div class="table-container">
+                    <table id="approvalsTable">
+                        <thead>
+                            <tr>
+                                <th>วันที่ยื่น</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>ประเภท</th>
+                                <th>วันที่ลา</th>
+                                <th>เหตุผล</th>
+                                <th>สถานะ</th>
+                                <th>การดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approvalsTableBody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personnel Tab -->
+        <div id="personnel" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">👥 จัดการบุคลากร</h2>
+                    <button class="btn btn-primary" onclick="openAddPersonnelModal()">
+                        <span>➕</span> เพิ่มบุคลากร
+                    </button>
+                </div>
+
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <input type="text" placeholder="ค้นหาชื่อบุคลากร..." onkeyup="filterPersonnel(this.value)">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                    <select style="width: auto; min-width: 180px;">
+                        <option value="all">ตำแหน่งทั้งหมด</option>
+                        <option value="teacher">ครู</option>
+                        <option value="admin">ผู้บริหาร</option>
+                        <option value="staff">เจ้าหน้าที่</option>
+                    </select>
+                </div>
+
+                <div class="personnel-grid" id="personnelGrid">
+                    <!-- Data will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="reports" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📈 รายงานสรุป</h2>
+                    <button class="btn btn-primary" onclick="exportReport()">
+                        <span>📥</span> ส่งออกรายงาน
+                    </button>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <label>เลือกช่วงเวลา:</label>
+                    <div style="display: flex; gap: 15px; margin-top: 10px;">
+                        <input type="date" id="reportStartDate" style="width: auto;">
+                        <span style="display: flex; align-items: center;">ถึง</span>
+                        <input type="date" id="reportEndDate" style="width: auto;">
+                        <button class="btn btn-primary" onclick="generateReport()">สร้างรายงาน</button>
+                    </div>
+                </div>
+
+                <div class="stats-overview">
+                    <div class="stat-box">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-number">245</div>
+                        <div class="stat-label">ใบลาทั้งหมด</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">🏥</div>
+                        <div class="stat-number">89</div>
+                        <div class="stat-label">ลาป่วย</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">📝</div>
+                        <div class="stat-number">102</div>
+                        <div class="stat-label">ลากิจ</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">🏖️</div>
+                        <div class="stat-number">54</div>
+                        <div class="stat-label">ลาพักผ่อน</div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ลำดับ</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>ลาป่วย (วัน)</th>
+                                <th>ลากิจ (วัน)</th>
+                                <th>ลาพักผ่อน (วัน)</th>
+                                <th>รวม (วัน)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td><strong>สมชาย ใจดี</strong></td>
+                                <td>5</td>
+                                <td>3</td>
+                                <td>7</td>
+                                <td><strong>15</strong></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td><strong>สมศรี วงศ์ดี</strong></td>
+                                <td>3</td>
+                                <td>2</td>
+                                <td>5</td>
+                                <td><strong>10</strong></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td><strong>วิชัย สุขใจ</strong></td>
+                                <td>2</td>
+                                <td>4</td>
+                                <td>6</td>
+                                <td><strong>12</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">⚙️ ตั้งค่าระบบ</h2>
+                </div>
+
+                <div class="form-group">
+                    <label>จำนวนวันลาป่วยต่อปี</label>
+                    <input type="number" value="30" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label>จำนวนวันลากิจต่อปี</label>
+                    <input type="number" value="15" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label>จำนวนวันลาพักผ่อนต่อปี</label>
+                    <input type="number" value="10" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label>อีเมลแจ้งเตือน</label>
+                    <input type="email" value="admin@school.ac.th">
+                </div>
+
+                <button class="btn btn-primary" onclick="saveSettings()">
+                    <span>💾</span> บันทึกการตั้งค่า
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Personnel Modal -->
+    <div id="addPersonnelModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-header">➕ เพิ่มบุคลากรใหม่</h2>
+            <form id="addPersonnelForm">
+                <div class="form-group">
+                    <label>ชื่อ-นามสกุล <span style="color: var(--danger);">*</span></label>
+                    <input type="text" name="name" required placeholder="ระบุชื่อ-นามสกุล">
+                </div>
+                <div class="form-group">
+                    <label>ตำแหน่ง <span style="color: var(--danger);">*</span></label>
+                    <select name="position" required>
+                        <option value="">เลือกตำแหน่ง</option>
+                        <option value="ครูผู้ช่วย">ครูผู้ช่วย</option>
+                        <option value="ครู">ครู</option>
+                        <option value="ครูชำนาญการ">ครูชำนาญการ</option>
+                        <option value="ครูชำนาญการพิเศษ">ครูชำนาญการพิเศษ</option>
+                        <option value="ครูเชี่ยวชาญ">ครูเชี่ยวชาญ</option>
+                        <option value="ครูเชี่ยวชาญพิเศษ">ครูเชี่ยวชาญพิเศษ</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>แผนก/กลุ่มสาระ</label>
+                    <input type="text" name="department" placeholder="เช่น คณิตศาสตร์">
+                </div>
+                
+                <div style="background: var(--bg); padding: 20px; border-radius: 12px; margin: 20px 0;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: var(--text);">🔐 ข้อมูลการเข้าสู่ระบบ</h3>
+                    
+                    <div class="form-group">
+                        <label>ชื่อผู้ใช้ (Username) <span style="color: var(--danger);">*</span></label>
+                        <input type="text" name="username" required placeholder="ตัวอักษรภาษาอังกฤษและตัวเลข" pattern="[a-zA-Z0-9_]+" title="ใช้ได้เฉพาะตัวอักษร a-z, A-Z, 0-9 และ _">
+                        <small style="color: var(--text-light); font-size: 0.85rem;">ตัวอย่าง: somchai123, teacher001</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>รหัสผ่าน (Password) <span style="color: var(--danger);">*</span></label>
+                        <input type="text" name="password" required placeholder="รหัสผ่านเริ่มต้น" minlength="6">
+                        <small style="color: var(--text-light); font-size: 0.85rem;">ต้องมีความยาวอย่างน้อย 6 ตัวอักษร</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>อีเมล</label>
+                    <input type="email" name="email" placeholder="example@school.ac.th">
+                </div>
+                <div class="form-group">
+                    <label>เบอร์โทรศัพท์</label>
+                    <input type="tel" name="phone" placeholder="081-234-5678">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddPersonnelModal()">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary">เพิ่มบุคลากร</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, getDocs, doc, getDoc, updateDoc, setDoc, deleteDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCFyb7qu110Nt2_MhRXK-AlSvu1Hhj2cJU",
+            authDomain: "e-leave-service.firebaseapp.com",
+            projectId: "e-leave-service",
+            storageBucket: "e-leave-service.firebasestorage.app",
+            messagingSenderId: "936880215366",
+            appId: "1:936880215366:web:dbd883b0ce4b03df4ec147",
+            measurementId: "G-N2Y7J3P6MP"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const analytics = getAnalytics(app);
+
+        // Check admin authentication
+        const currentAdminData = sessionStorage.getItem('currentAdmin');
+        if (!currentAdminData) {
+            window.location.href = 'admin-login.html';
+        }
+
+        const currentAdmin = JSON.parse(currentAdminData);
+        const currentAdminId = currentAdmin.id;
+        const currentAdminName = currentAdmin.name;
+
+        // Update admin display
+        document.querySelector('.admin-info .admin-avatar').textContent = currentAdmin.name.charAt(0);
+        document.querySelectorAll('.admin-info > div > div')[0].textContent = currentAdmin.name;
+
+        // Logout function
+        window.logout = function() {
+            if (confirm('ต้องการออกจากระบบใช่หรือไม่?')) {
+                sessionStorage.removeItem('currentAdmin');
+                window.location.href = 'admin-login.html';
+            }
+        };
+
+        // Global variables
+        window.currentLeaveId = null;
+        window.allLeaves = [];
+
+        // Switch navigation tabs
+        window.switchTab = function(tabName) {
+            // Update navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.nav-item').classList.add('active');
+
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+
+            // Update page title
+            const titles = {
+                'dashboard': 'แดชบอร์ด',
+                'approvals': 'อนุมัติการลา',
+                'personnel': 'จัดการบุคลากร',
+                'reports': 'รายงานสรุป',
+                'settings': 'ตั้งค่า'
+            };
+            document.getElementById('pageTitle').textContent = titles[tabName];
+
+            // Load data for specific tabs
+            if (tabName === 'approvals') loadApprovalsData();
+            if (tabName === 'personnel') loadPersonnelData();
+            if (tabName === 'reports') loadReportsData();
+        };
+
+        // Approve leave
+        window.approveLeave = async function(button) {
+            if (!confirm('ยืนยันการอนุมัติใบลานี้?')) return;
+
+            const row = button.closest('tr');
+            const leaveId = row.dataset.leaveId;
+
+            try {
+                const leaveRef = doc(db, 'leaves', leaveId);
+                await updateDoc(leaveRef, {
+                    status: 'อนุมัติแล้ว',
+                    approvedBy: currentAdminName,
+                    approvedDate: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+
+                // Update user's remaining leave days
+                const leaveDoc = await getDoc(leaveRef);
+                const leaveData = leaveDoc.data();
+                await updateUserLeaveBalance(leaveData.userId, leaveData.type, -leaveData.days);
+
+                alert('✅ อนุมัติใบลาเรียบร้อยแล้ว');
+                updateDashboardStats();
+            } catch (error) {
+                console.error('Error approving leave:', error);
+                alert('❌ เกิดข้อผิดพลาด: ' + error.message);
+            }
+        };
+
+        // Reject leave
+        window.rejectLeave = async function(button) {
+            const reason = prompt('กรุณาระบุเหตุผลที่ไม่อนุมัติ:');
+            if (!reason) return;
+
+            const row = button.closest('tr');
+            const leaveId = row.dataset.leaveId;
+
+            try {
+                await updateDoc(doc(db, 'leaves', leaveId), {
+                    status: 'ไม่อนุมัติ',
+                    rejectedBy: currentAdminName,
+                    rejectedDate: new Date().toISOString(),
+                    adminNote: reason,
+                    updatedAt: new Date().toISOString()
+                });
+
+                alert('❌ ไม่อนุมัติใบลาเรียบร้อยแล้ว');
+                updateDashboardStats();
+            } catch (error) {
+                console.error('Error rejecting leave:', error);
+                alert('❌ เกิดข้อผิดพลาด: ' + error.message);
+            }
+        };
+
+        // Update user leave balance
+        async function updateUserLeaveBalance(userId, leaveType, days) {
+            const userRef = doc(db, 'users', userId);
+            const userDoc = await getDoc(userRef);
+            
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                const updates = {};
+
+                if (leaveType === 'ลาป่วย') {
+                    updates.sickLeaveRemaining = (userData.sickLeaveRemaining || 30) + days;
+                } else if (leaveType === 'ลากิจ') {
+                    updates.personalLeaveRemaining = (userData.personalLeaveRemaining || 15) + days;
+                } else if (leaveType === 'ลาพักผ่อน') {
+                    updates.vacationLeaveRemaining = (userData.vacationLeaveRemaining || 10) + days;
+                }
+
+                await updateDoc(userRef, updates);
+            }
+        }
+
+        // Update dashboard statistics
+        async function updateDashboardStats() {
+            try {
+                // Count total personnel
+                const usersSnapshot = await getDocs(collection(db, 'users'));
+                const totalPersonnel = usersSnapshot.size;
+
+                // Count pending leaves
+                const pendingQuery = query(collection(db, 'leaves'), where('status', '==', 'รออนุมัติ'));
+                const pendingSnapshot = await getDocs(pendingQuery);
+                const pendingCount = pendingSnapshot.size;
+
+                // Count approved leaves this month
+                const now = new Date();
+                const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+                const approvedQuery = query(
+                    collection(db, 'leaves'),
+                    where('status', '==', 'อนุมัติแล้ว'),
+                    where('approvedDate', '>=', firstDayOfMonth)
+                );
+                const approvedSnapshot = await getDocs(approvedQuery);
+                const approvedCount = approvedSnapshot.size;
+
+                // Count leaves today
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+                const todayEnd = new Date();
+                todayEnd.setHours(23, 59, 59, 999);
+                
+                let todayCount = 0;
+                const allLeavesSnapshot = await getDocs(collection(db, 'leaves'));
+                allLeavesSnapshot.forEach(doc => {
+                    const leave = doc.data();
+                    const start = new Date(leave.startDate);
+                    const end = new Date(leave.endDate);
+                    if (leave.status === 'อนุมัติแล้ว' && start <= todayEnd && end >= todayStart) {
+                        todayCount++;
+                    }
+                });
+
+                // Update UI
+                document.querySelector('.stats-overview .stat-box:nth-child(1) .stat-number').textContent = totalPersonnel;
+                document.querySelector('.stats-overview .stat-box:nth-child(2) .stat-number').textContent = pendingCount;
+                document.querySelector('.stats-overview .stat-box:nth-child(3) .stat-number').textContent = approvedCount;
+                document.querySelector('.stats-overview .stat-box:nth-child(4) .stat-number').textContent = todayCount;
+            } catch (error) {
+                console.error('Error updating stats:', error);
+            }
+        }
+
+        // Load pending requests for dashboard
+        function loadPendingRequests() {
+            const tbody = document.getElementById('pendingRequestsTable').querySelector('tbody');
+            
+            const q = query(
+                collection(db, 'leaves'),
+                where('status', '==', 'รออนุมัติ'),
+                orderBy('submittedDate', 'desc')
+            );
+
+            onSnapshot(q, (querySnapshot) => {
+                if (querySnapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-light);">ไม่มีคำขอที่รอดำเนินการ</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                querySnapshot.forEach((docSnapshot) => {
+                    const leave = docSnapshot.data();
+                    const row = document.createElement('tr');
+                    row.dataset.leaveId = docSnapshot.id;
+
+                    const startDate = new Date(leave.startDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+                    const endDate = new Date(leave.endDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+
+                    row.innerHTML = `
+                        <td><strong>${leave.userName}</strong></td>
+                        <td>${leave.type}</td>
+                        <td>${startDate} - ${endDate}</td>
+                        <td>${leave.days} วัน</td>
+                        <td><span class="status-badge status-pending">รออนุมัติ</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-success" onclick="approveLeave(this)">✓ อนุมัติ</button>
+                                <button class="btn btn-danger" onclick="rejectLeave(this)">✗ ไม่อนุมัติ</button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            });
+        }
+
+        // Load approvals data
+        window.loadApprovalsData = function() {
+            const tbody = document.getElementById('approvalsTableBody');
+            
+            const q = query(
+                collection(db, 'leaves'),
+                orderBy('submittedDate', 'desc')
+            );
+
+            onSnapshot(q, (querySnapshot) => {
+                window.allLeaves = [];
+                querySnapshot.forEach((docSnapshot) => {
+                    window.allLeaves.push({ id: docSnapshot.id, ...docSnapshot.data() });
+                });
+
+                renderApprovalsTable(window.allLeaves);
+            });
+        };
+
+        function renderApprovalsTable(leaves) {
+            const tbody = document.getElementById('approvalsTableBody');
+            
+            if (leaves.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--text-light);">ไม่มีข้อมูล</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = leaves.map(leave => {
+                const statusClass = leave.status === 'อนุมัติแล้ว' ? 'status-approved' : 
+                                  leave.status === 'ไม่อนุมัติ' ? 'status-rejected' : 'status-pending';
+
+                const submittedDate = new Date(leave.submittedDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+                const startDate = new Date(leave.startDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+                const endDate = new Date(leave.endDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+
+                const actions = leave.status === 'รออนุมัติ' ? 
+                    `<div class="action-buttons">
+                        <button class="btn btn-success" onclick="approveLeave(this)">✓ อนุมัติ</button>
+                        <button class="btn btn-danger" onclick="rejectLeave(this)">✗ ไม่อนุมัติ</button>
+                    </div>` : 
+                    `<span style="color: ${leave.status === 'อนุมัติแล้ว' ? 'var(--success)' : 'var(--danger)'};">${leave.status}</span>`;
+
+                return `
+                    <tr data-leave-id="${leave.id}">
+                        <td>${submittedDate}</td>
+                        <td><strong>${leave.userName}</strong></td>
+                        <td>${leave.type}</td>
+                        <td>${startDate} - ${endDate}</td>
+                        <td>${leave.reason}</td>
+                        <td><span class="status-badge ${statusClass}">${leave.status}</span></td>
+                        <td>${actions}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Filter functions
+        window.filterApprovals = function(searchText) {
+            const filtered = window.allLeaves.filter(leave => 
+                leave.userName.toLowerCase().includes(searchText.toLowerCase())
+            );
+            renderApprovalsTable(filtered);
+        };
+
+        window.filterByStatus = function(status) {
+            if (status === 'all') {
+                renderApprovalsTable(window.allLeaves);
+            } else {
+                const statusMap = {
+                    'pending': 'รออนุมัติ',
+                    'approved': 'อนุมัติแล้ว',
+                    'rejected': 'ไม่อนุมัติ'
+                };
+                const filtered = window.allLeaves.filter(leave => leave.status === statusMap[status]);
+                renderApprovalsTable(filtered);
+            }
+        };
+
+        // Load personnel data
+        window.loadPersonnelData = function() {
+            const grid = document.getElementById('personnelGrid');
+            
+            onSnapshot(collection(db, 'users'), async (querySnapshot) => {
+                if (querySnapshot.empty) {
+                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-light);">ยังไม่มีข้อมูลบุคลากร</div>';
+                    return;
+                }
+
+                const personnel = [];
+                for (const docSnapshot of querySnapshot.docs) {
+                    const user = { id: docSnapshot.id, ...docSnapshot.data() };
+                    
+                    // Calculate leave usage
+                    const leavesQuery = query(
+                        collection(db, 'leaves'),
+                        where('userId', '==', user.id),
+                        where('status', '==', 'อนุมัติแล้ว')
+                    );
+                    const leavesSnapshot = await getDocs(leavesQuery);
+                    
+                    let sickDays = 0, personalDays = 0, vacationDays = 0;
+                    leavesSnapshot.forEach(doc => {
+                        const leave = doc.data();
+                        if (leave.type === 'ลาป่วย') sickDays += leave.days;
+                        else if (leave.type === 'ลากิจ') personalDays += leave.days;
+                        else if (leave.type === 'ลาพักผ่อน') vacationDays += leave.days;
+                    });
+
+                    personnel.push({ ...user, sickDays, personalDays, vacationDays });
+                }
+
+                grid.innerHTML = personnel.map(person => `
+                    <div class="personnel-card">
+                        <div class="personnel-name">${person.name}</div>
+                        <div class="personnel-position">${person.position || 'ไม่ระบุตำแหน่ง'}</div>
+                        <div class="personnel-stats">
+                            <div class="personnel-stat">
+                                <div class="personnel-stat-value">${person.sickDays}</div>
+                                <div class="personnel-stat-label">ลาป่วย</div>
+                            </div>
+                            <div class="personnel-stat">
+                                <div class="personnel-stat-value">${person.personalDays}</div>
+                                <div class="personnel-stat-label">ลากิจ</div>
+                            </div>
+                            <div class="personnel-stat">
+                                <div class="personnel-stat-value">${person.vacationDays}</div>
+                                <div class="personnel-stat-label">ลาพักผ่อน</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary" style="width: 100%; margin-top: 15px;" onclick="viewPersonnelDetail('${person.id}')">
+                            ดูรายละเอียด
+                        </button>
+                    </div>
+                `).join('');
+            });
+        };
+
+        // View personnel detail
+        window.viewPersonnelDetail = async function(userId) {
+            try {
+                const userDoc = await getDoc(doc(db, 'users', userId));
+                if (!userDoc.exists()) {
+                    alert('ไม่พบข้อมูลบุคลากร');
+                    return;
+                }
+
+                const user = userDoc.data();
+                const leavesQuery = query(
+                    collection(db, 'leaves'),
+                    where('userId', '==', userId),
+                    where('status', '==', 'อนุมัติแล้ว')
+                );
+                const leavesSnapshot = await getDocs(leavesQuery);
+                
+                let sickDays = 0, personalDays = 0, vacationDays = 0;
+                leavesSnapshot.forEach(doc => {
+                    const leave = doc.data();
+                    if (leave.type === 'ลาป่วย') sickDays += leave.days;
+                    else if (leave.type === 'ลากิจ') personalDays += leave.days;
+                    else if (leave.type === 'ลาพักผ่อน') vacationDays += leave.days;
+                });
+
+                alert(`รายละเอียด: ${user.name}\n\nตำแหน่ง: ${user.position || 'ไม่ระบุ'}\n\nการลา:\n- ลาป่วย: ${sickDays} วัน (เหลือ ${(user.sickLeaveRemaining || 30)} วัน)\n- ลากิจ: ${personalDays} วัน (เหลือ ${(user.personalLeaveRemaining || 15)} วัน)\n- ลาพักผ่อน: ${vacationDays} วัน (เหลือ ${(user.vacationLeaveRemaining || 10)} วัน)`);
+            } catch (error) {
+                console.error('Error viewing personnel detail:', error);
+                alert('เกิดข้อผิดพลาด: ' + error.message);
+            }
+        };
+
+        window.filterPersonnel = function(searchText) {
+            const cards = document.querySelectorAll('.personnel-card');
+            cards.forEach(card => {
+                const name = card.querySelector('.personnel-name').textContent.toLowerCase();
+                card.style.display = name.includes(searchText.toLowerCase()) ? '' : 'none';
+            });
+        };
+
+        // Load reports data
+        window.loadReportsData = async function() {
+            try {
+                const leavesSnapshot = await getDocs(collection(db, 'leaves'));
+                
+                let totalLeaves = 0, sickCount = 0, personalCount = 0, vacationCount = 0;
+                
+                leavesSnapshot.forEach(doc => {
+                    const leave = doc.data();
+                    if (leave.status === 'อนุมัติแล้ว') {
+                        totalLeaves++;
+                        if (leave.type === 'ลาป่วย') sickCount++;
+                        else if (leave.type === 'ลากิจ') personalCount++;
+                        else if (leave.type === 'ลาพักผ่อน') vacationCount++;
+                    }
+                });
+
+                document.querySelector('#reports .stats-overview .stat-box:nth-child(1) .stat-number').textContent = totalLeaves;
+                document.querySelector('#reports .stats-overview .stat-box:nth-child(2) .stat-number').textContent = sickCount;
+                document.querySelector('#reports .stats-overview .stat-box:nth-child(3) .stat-number').textContent = personalCount;
+                document.querySelector('#reports .stats-overview .stat-box:nth-child(4) .stat-number').textContent = vacationCount;
+            } catch (error) {
+                console.error('Error loading reports:', error);
+            }
+        };
+
+        // Modal functions
+        window.openAddPersonnelModal = function() {
+            document.getElementById('addPersonnelModal').classList.add('active');
+        };
+
+        window.closeAddPersonnelModal = function() {
+            document.getElementById('addPersonnelModal').classList.remove('active');
+        };
+
+        // Add personnel form submission
+        document.getElementById('addPersonnelForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const username = formData.get('username').trim();
+            const password = formData.get('password');
+
+            // Validate username format
+            if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                alert('⚠️ ชื่อผู้ใช้ต้องเป็นตัวอักษร a-z, A-Z, 0-9 และ _ เท่านั้น');
+                return;
+            }
+
+            // Check if username already exists
+            try {
+                const usernameQuery = query(
+                    collection(db, 'users'),
+                    where('username', '==', username)
+                );
+                const usernameSnapshot = await getDocs(usernameQuery);
+                
+                if (!usernameSnapshot.empty) {
+                    alert('⚠️ ชื่อผู้ใช้นี้ถูกใช้งานแล้ว กรุณาเลือกชื่อผู้ใช้อื่น');
+                    return;
+                }
+
+                const userData = {
+                    name: formData.get('name'),
+                    position: formData.get('position'),
+                    department: formData.get('department') || '',
+                    username: username,
+                    password: password,
+                    email: formData.get('email') || '',
+                    phone: formData.get('phone') || '',
+                    role: 'teacher',
+                    sickLeaveRemaining: 30,
+                    personalLeaveRemaining: 15,
+                    vacationLeaveRemaining: 10,
+                    createdAt: new Date().toISOString(),
+                    createdBy: currentAdminName
+                };
+
+                // Generate user ID
+                const userId = 'teacher_' + Date.now();
+                await setDoc(doc(db, 'users', userId), userData);
+
+                alert(`✅ เพิ่มบุคลากรเรียบร้อยแล้ว!\n\nชื่อผู้ใช้: ${username}\nรหัสผ่าน: ${password}\n\n⚠️ โปรดบันทึกข้อมูลนี้และแจ้งให้บุคลากรทราบ`);
+                window.closeAddPersonnelModal();
+                this.reset();
+                updateDashboardStats();
+            } catch (error) {
+                console.error('Error adding personnel:', error);
+                alert('❌ เกิดข้อผิดพลาด: ' + error.message);
+            }
+        });
+
+        // Export and generate report functions
+        window.exportReport = function() {
+            alert('📥 กำลังสร้างไฟล์รายงาน...\n\nไฟล์รายงานจะถูกดาวน์โหลดในรูปแบบ Excel');
+        };
+
+        window.generateReport = function() {
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            
+            if (!startDate || !endDate) {
+                alert('⚠️ กรุณาเลือกช่วงเวลาที่ต้องการสร้างรายงาน');
+                return;
+            }
+            
+            alert(`📊 กำลังสร้างรายงานสำหรับช่วง\n${new Date(startDate).toLocaleDateString('th-TH')} - ${new Date(endDate).toLocaleDateString('th-TH')}`);
+        };
+
+        window.saveSettings = function() {
+            alert('💾 บันทึกการตั้งค่าเรียบร้อยแล้ว');
+        };
+
+        // Close modal when clicking outside
+        document.getElementById('addPersonnelModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                window.closeAddPersonnelModal();
+            }
+        });
+
+        // Initialize sample data (run once)
+        async function initializeSampleData() {
+            try {
+                // Check if data already exists
+                const usersSnapshot = await getDocs(collection(db, 'users'));
+                if (!usersSnapshot.empty) {
+                    console.log('Sample data already exists');
+                    return;
+                }
+
+                // Add sample users
+                const sampleUsers = [
+                    { id: 'teacher_001', name: 'สมชาย ใจดี', position: 'ครูชำนาญการพิเศษ', sickLeaveRemaining: 25, personalLeaveRemaining: 12, vacationLeaveRemaining: 8 },
+                    { id: 'teacher_002', name: 'สมศรี วงศ์ดี', position: 'ครูชำนาญการ', sickLeaveRemaining: 28, personalLeaveRemaining: 13, vacationLeaveRemaining: 9 },
+                    { id: 'teacher_003', name: 'วิชัย สุขใจ', position: 'ครูผู้ช่วย', sickLeaveRemaining: 30, personalLeaveRemaining: 15, vacationLeaveRemaining: 10 },
+                    { id: 'teacher_004', name: 'สุดา มีสุข', position: 'ครูชำนาญการพิเศษ', sickLeaveRemaining: 27, personalLeaveRemaining: 10, vacationLeaveRemaining: 7 },
+                    { id: 'teacher_005', name: 'ประเสริฐ ดีงาม', position: 'ครูเชี่ยวชาญ', sickLeaveRemaining: 29, personalLeaveRemaining: 14, vacationLeaveRemaining: 9 }
+                ];
+
+                for (const user of sampleUsers) {
+                    await setDoc(doc(db, 'users', user.id), user);
+                }
+
+                console.log('Sample data initialized successfully');
+            } catch (error) {
+                console.error('Error initializing sample data:', error);
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize sample data (comment out after first run)
+            // await initializeSampleData();
+
+            // Load real-time data
+            updateDashboardStats();
+            loadPendingRequests();
+            
+            // Set default dates for report
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            document.getElementById('reportStartDate').valueAsDate = firstDay;
+            document.getElementById('reportEndDate').valueAsDate = today;
+        });
+    </script>
+</body>
+</html>
