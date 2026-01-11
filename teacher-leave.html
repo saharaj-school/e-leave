@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบการลา - ข้าราชการครู</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --shadow: rgba(15, 23, 42, 0.08);
+        }
+
+        body {
+            font-family: 'Kanit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            color: var(--text);
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--primary);
+            letter-spacing: -0.02em;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            background: var(--primary);
+            border-radius: 50px;
+            color: white;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-suffix {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-left: 5px;
+        }
+
+        .form-card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: var(--text);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .required {
+            color: #ef4444;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: 'Kanit', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .date-range {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Kanit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .history-section {
+            margin-top: 20px;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .history-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .leave-item {
+            padding: 16px;
+            border-left: 3px solid var(--primary);
+            background: var(--bg);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .leave-item:hover {
+            transform: translateX(3px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .leave-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .leave-type {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 1.1rem;
+        }
+
+        .status-badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .leave-dates {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .form-card, .history-section {
+                padding: 20px;
+            }
+
+            .date-range {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-value {
+                font-size: 1.8rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .user-info {
+                font-size: 0.9rem;
+                padding: 10px 16px;
+            }
+
+            .user-avatar {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <h1>📋 ระบบการลา</h1>
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar"></div>
+                    <div>
+                        <div style="font-weight: 600;" id="userName"></div>
+                        <div style="font-size: 0.9rem; opacity: 0.9;" id="userPosition"></div>
+                    </div>
+                    <button onclick="logout()" style="margin-left: 15px; padding: 8px 16px; background: rgba(255,255,255,0.2); border: none; border-radius: 8px; color: white; cursor: pointer; font-family: 'Kanit', sans-serif; font-weight: 600;">
+                        🚪 ออกจากระบบ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">วันลาป่วยคงเหลือ</div>
+                <div class="stat-value">
+                    0
+                    <span class="stat-suffix">/ 30 วัน</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">วันลากิจคงเหลือ</div>
+                <div class="stat-value">
+                    0
+                    <span class="stat-suffix">/ 45 วัน</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">วันลาพักผ่อนคงเหลือ</div>
+                <div class="stat-value">
+                    0
+                    <span class="stat-suffix">/ 10 วัน</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <h2 class="form-title">✍️ ยื่นใบลา</h2>
+            <form id="leaveForm">
+                <div class="form-group">
+                    <label>ประเภทการลา <span class="required">*</span></label>
+                    <select id="leaveType" required>
+                        <option value="">เลือกประเภทการลา</option>
+                        <option value="ลาป่วย">1. ลาป่วย</option>
+                        <option value="ลาคลอดบุตร">2. ลาคลอดบุตร</option>
+                        <option value="ลาช่วยเหลือภริยาคลอดบุตร">3. ลาช่วยเหลือภริยาที่คลอดบุตร</option>
+                        <option value="ลากิจส่วนตัว">4. ลากิจส่วนตัว</option>
+                        <option value="ลาพักผ่อน">5. ลาพักผ่อน</option>
+                        <option value="ลาอุปสมบท">6. ลาอุปสมบท/ประกอบพิธีฮัจย์</option>
+                        <option value="ลาศึกษา">7. ลาศึกษา ฝึกอบรม ดูงาน</option>
+                        <option value="ลาปฏิบัติงานองค์การระหว่างประเทศ">8. ลาปฏิบัติงานในองค์การระหว่างประเทศ</option>
+                        <option value="ลาฟื้นฟูสมรรถภาพ">9. ลาฟื้นฟูสมรรถภาพด้านอาชีพ</option>
+                        <option value="ลาติดตามคู่สมรส">10. ลาติดตามคู่สมรส</option>
+                        <option value="ลาปฏิบัติงานในหน่วยงานอื่น">11. ลาปฏิบัติงานในหน่วยงานอื่น</option>
+                    </select>
+                </div>
+
+                <div class="date-range">
+                    <div class="form-group">
+                        <label>วันที่เริ่มต้น <span class="required">*</span></label>
+                        <input type="date" id="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>วันที่สิ้นสุด <span class="required">*</span></label>
+                        <input type="date" id="endDate" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>เหตุผลการลา <span class="required">*</span></label>
+                    <textarea id="reason" placeholder="โปรดระบุเหตุผลการลา..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>ผู้รักษาการแทน</label>
+                    <select id="substitute">
+                        <option value="">เลือกผู้รักษาการแทน</option>
+                        <option value="อาจารย์สมศรี วงศ์ดี">อาจารย์สมศรี วงศ์ดี</option>
+                        <option value="อาจารย์วิชัย สุขใจ">อาจารย์วิชัย สุขใจ</option>
+                        <option value="อาจารย์สุดา มีสุข">อาจารย์สุดา มีสุข</option>
+                        <option value="อาจารย์ประเสริฐ ดีงาม">อาจารย์ประเสริฐ ดีงาม</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">ล้างข้อมูล</button>
+                    <button type="submit" class="btn btn-primary">ส่งใบลา</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="history-section">
+            <h2 class="history-title">📜 ประวัติการลา</h2>
+            <div id="leaveHistory">
+                <div style="text-align: center; padding: 40px; color: var(--text-light);">
+                    <div class="spinner" style="border: 3px solid var(--border); border-top: 3px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px;"></div>
+                    กำลังโหลดข้อมูล...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
+
+        // Get leave type icon and color
+        function getLeaveTypeStyle(type) {
+            const styles = {
+                'ลาป่วย': { icon: '🏥', color: '#ef4444', bg: '#fee2e2' },
+                'ลาคลอดบุตร': { icon: '👶', color: '#ec4899', bg: '#fce7f3' },
+                'ลาช่วยเหลือภริยาคลอดบุตร': { icon: '🤱', color: '#f59e0b', bg: '#fef3c7' },
+                'ลากิจส่วนตัว': { icon: '📝', color: '#3b82f6', bg: '#dbeafe' },
+                'ลาพักผ่อน': { icon: '🏖️', color: '#10b981', bg: '#d1fae5' },
+                'ลาอุปสมบท': { icon: '🙏', color: '#06b6d4', bg: '#cffafe' },
+                'ลาศึกษา': { icon: '📚', color: '#8b5cf6', bg: '#ede9fe' },
+                'ลาปฏิบัติงานองค์การระหว่างประเทศ': { icon: '🌏', color: '#14b8a6', bg: '#ccfbf1' },
+                'ลาฟื้นฟูสมรรถภาพ': { icon: '💪', color: '#f97316', bg: '#ffedd5' },
+                'ลาติดตามคู่สมรส': { icon: '✈️', color: '#6366f1', bg: '#e0e7ff' },
+                'ลาปฏิบัติงานในหน่วยงานอื่น': { icon: '🏛️', color: '#64748b', bg: '#f1f5f9' }
+            };
+            return styles[type] || { icon: '📋', color: '#64748b', bg: '#f1f5f9' };
+        }
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCFyb7qu110Nt2_MhRXK-AlSvu1Hhj2cJU",
+            authDomain: "e-leave-service.firebaseapp.com",
+            projectId: "e-leave-service",
+            storageBucket: "e-leave-service.firebasestorage.app",
+            messagingSenderId: "936880215366",
+            appId: "1:936880215366:web:dbd883b0ce4b03df4ec147",
+            measurementId: "G-N2Y7J3P6MP"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const analytics = getAnalytics(app);
+
+        // Check authentication
+        const currentUserData = sessionStorage.getItem('currentUser');
+        if (!currentUserData) {
+            window.location.href = 'index.html';
+        }
+
+        const currentUser = JSON.parse(currentUserData);
+        const currentUserId = currentUser.id;
+        const currentUserName = currentUser.name;
+
+        // Update user display
+        document.getElementById('userName').textContent = currentUser.name;
+        document.getElementById('userPosition').textContent = currentUser.position || 'ครู';
+        document.getElementById('userAvatar').textContent = currentUser.name.charAt(0);
+
+        // Logout function
+        window.logout = function() {
+            if (confirm('ต้องการออกจากระบบใช่หรือไม่?')) {
+                sessionStorage.removeItem('currentUser');
+                window.location.href = 'index.html';
+            }
+        };
+
+        // Set minimum date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('startDate').min = today;
+        document.getElementById('endDate').min = today;
+
+        // Update end date minimum when start date changes
+        document.getElementById('startDate').addEventListener('change', function() {
+            document.getElementById('endDate').min = this.value;
+        });
+
+        // Form submission
+        document.getElementById('leaveForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+            const leaveData = {
+                userId: currentUserId,
+                userName: currentUserName,
+                type: document.getElementById('leaveType').value,
+                startDate: startDate,
+                endDate: endDate,
+                reason: document.getElementById('reason').value,
+                substitute: document.getElementById('substitute').value,
+                status: 'รออนุมัติ',
+                days: days,
+                submittedDate: new Date().toISOString(),
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                // Save to Firestore
+                await addDoc(collection(db, 'leaves'), leaveData);
+
+                // Show success message
+                alert('✅ ส่งใบลาเรียบร้อยแล้ว!\n\nใบลาของคุณถูกส่งไปยังผู้บริหารเพื่อพิจารณาอนุมัติ');
+                
+                // Reset form
+                resetForm();
+                
+                // Reload history will happen automatically via onSnapshot
+            } catch (error) {
+                console.error('Error adding document: ', error);
+                alert('❌ เกิดข้อผิดพลาด: ' + error.message);
+            }
+        });
+
+        function resetForm() {
+            document.getElementById('leaveForm').reset();
+        }
+
+        // Load leave statistics
+        async function loadLeaveStats() {
+            try {
+                const userDoc = await getDoc(doc(db, 'users', currentUserId));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    const sickRemaining = userData.sickLeaveRemaining !== undefined ? userData.sickLeaveRemaining : 30;
+                    const personalRemaining = userData.personalLeaveRemaining !== undefined ? userData.personalLeaveRemaining : 45;
+                    const vacationRemaining = userData.vacationLeaveRemaining !== undefined ? userData.vacationLeaveRemaining : 10;
+                    
+                    document.querySelector('.stats-grid .stat-card:nth-child(1) .stat-value').innerHTML = 
+                        `${sickRemaining}<span class="stat-suffix">/ 30 วัน</span>`;
+                    document.querySelector('.stats-grid .stat-card:nth-child(2) .stat-value').innerHTML = 
+                        `${personalRemaining}<span class="stat-suffix">/ 45 วัน</span>`;
+                    document.querySelector('.stats-grid .stat-card:nth-child(3) .stat-value').innerHTML = 
+                        `${vacationRemaining}<span class="stat-suffix">/ 10 วัน</span>`;
+                } else {
+                    // Set to default values for Thai government teachers
+                    document.querySelector('.stats-grid .stat-card:nth-child(1) .stat-value').innerHTML = 
+                        `30<span class="stat-suffix">/ 30 วัน</span>`;
+                    document.querySelector('.stats-grid .stat-card:nth-child(2) .stat-value').innerHTML = 
+                        `45<span class="stat-suffix">/ 45 วัน</span>`;
+                    document.querySelector('.stats-grid .stat-card:nth-child(3) .stat-value').innerHTML = 
+                        `10<span class="stat-suffix">/ 10 วัน</span>`;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                // Set to default on error
+                document.querySelector('.stats-grid .stat-card:nth-child(1) .stat-value').innerHTML = 
+                    `30<span class="stat-suffix">/ 30 วัน</span>`;
+                document.querySelector('.stats-grid .stat-card:nth-child(2) .stat-value').innerHTML = 
+                    `45<span class="stat-suffix">/ 45 วัน</span>`;
+                document.querySelector('.stats-grid .stat-card:nth-child(3) .stat-value').innerHTML = 
+                    `10<span class="stat-suffix">/ 10 วัน</span>`;
+            }
+        }
+
+        // Real-time leave history updates
+        function loadLeaveHistory() {
+            const historyDiv = document.getElementById('leaveHistory');
+            
+            // Create query for current user's leaves
+            const q = query(
+                collection(db, 'leaves'),
+                where('userId', '==', currentUserId),
+                orderBy('submittedDate', 'desc')
+            );
+
+            // Listen for real-time updates
+            onSnapshot(q, (querySnapshot) => {
+                if (querySnapshot.empty) {
+                    historyDiv.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-light);">ยังไม่มีประวัติการลา</div>';
+                    return;
+                }
+
+                const leaves = [];
+                querySnapshot.forEach((doc) => {
+                    leaves.push({ id: doc.id, ...doc.data() });
+                });
+
+                historyDiv.innerHTML = leaves.map(leave => {
+                    const statusClass = leave.status === 'อนุมัติแล้ว' ? 'status-approved' : 
+                                      leave.status === 'ไม่อนุมัติ' ? 'status-rejected' : 'status-pending';
+                    
+                    const startDate = new Date(leave.startDate).toLocaleDateString('th-TH', { 
+                        day: 'numeric', 
+                        month: 'short', 
+                        year: 'numeric' 
+                    });
+                    const endDate = new Date(leave.endDate).toLocaleDateString('th-TH', { 
+                        day: 'numeric', 
+                        month: 'short', 
+                        year: 'numeric' 
+                    });
+
+                    const style = getLeaveTypeStyle(leave.type);
+
+                    return `
+                        <div class="leave-item">
+                            <div class="leave-header">
+                                <div style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: ${style.bg}; color: ${style.color}; border-radius: 20px; font-weight: 600; font-size: 0.95rem;">
+                                    <span style="font-size: 1.2rem;">${style.icon}</span>
+                                    <span>${leave.type}</span>
+                                </div>
+                                <span class="status-badge ${statusClass}">${leave.status}</span>
+                            </div>
+                            <div class="leave-dates">${startDate} - ${endDate} (${leave.days} วัน)</div>
+                            <div style="color: var(--text-light); font-size: 0.9rem; margin-top: 8px;">
+                                เหตุผล: ${leave.reason}
+                            </div>
+                            ${leave.adminNote ? `
+                                <div style="color: var(--danger); font-size: 0.9rem; margin-top: 8px;">
+                                    หมายเหตุจากผู้บริหาร: ${leave.adminNote}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }, (error) => {
+                console.error('Error loading leave history:', error);
+                historyDiv.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--danger);">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>';
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLeaveStats();
+            loadLeaveHistory();
+        });
+    </script>
+</body>
+</html>
