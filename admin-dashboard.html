@@ -1568,10 +1568,10 @@
         function loadPendingRequests() {
             const tbody = document.getElementById('pendingRequestsTable').querySelector('tbody');
             
+            // Query without orderBy to avoid index requirement
             const q = query(
                 collection(db, 'leaves'),
-                where('status', '==', 'รออนุมัติ'),
-                orderBy('submittedDate', 'desc')
+                where('status', '==', 'รออนุมัติ')
             );
 
             onSnapshot(q, (querySnapshot) => {
@@ -1580,11 +1580,26 @@
                     return;
                 }
 
-                tbody.innerHTML = '';
+                // Collect and sort data in JavaScript
+                const leaves = [];
                 querySnapshot.forEach((docSnapshot) => {
-                    const leave = docSnapshot.data();
+                    leaves.push({
+                        id: docSnapshot.id,
+                        ...docSnapshot.data()
+                    });
+                });
+
+                // Sort by submittedDate descending (newest first)
+                leaves.sort((a, b) => {
+                    const dateA = a.submittedDate ? new Date(a.submittedDate) : new Date(0);
+                    const dateB = b.submittedDate ? new Date(b.submittedDate) : new Date(0);
+                    return dateB - dateA;
+                });
+
+                tbody.innerHTML = '';
+                leaves.forEach((leave) => {
                     const row = document.createElement('tr');
-                    row.dataset.leaveId = docSnapshot.id;
+                    row.dataset.leaveId = leave.id;
 
                     const startDate = new Date(leave.startDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
                     const endDate = new Date(leave.endDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
