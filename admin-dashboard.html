@@ -669,23 +669,23 @@
     <div class="sidebar" id="sidebar">
         <div class="logo">🎓 Admin Panel</div>
         <nav>
-            <div class="nav-item active" onclick="switchTab('dashboard')">
+            <div class="nav-item active" onclick="switchTab('dashboard', this)">
                 <span class="nav-icon">📊</span>
                 <span>แดชบอร์ด</span>
             </div>
-            <div class="nav-item" onclick="switchTab('approvals')">
+            <div class="nav-item" onclick="switchTab('approvals', this)">
                 <span class="nav-icon">✅</span>
                 <span>อนุมัติการลา</span>
             </div>
-            <div class="nav-item" onclick="switchTab('personnel')">
+            <div class="nav-item" onclick="switchTab('personnel', this)">
                 <span class="nav-icon">👥</span>
                 <span>จัดการบุคลากร</span>
             </div>
-            <div class="nav-item" onclick="switchTab('reports')">
+            <div class="nav-item" onclick="switchTab('reports', this)">
                 <span class="nav-icon">📈</span>
                 <span>รายงานสรุป</span>
             </div>
-            <div class="nav-item" onclick="switchTab('settings')">
+            <div class="nav-item" onclick="switchTab('settings', this)">
                 <span class="nav-icon">⚙️</span>
                 <span>ตั้งค่า</span>
             </div>
@@ -1236,15 +1236,21 @@
         const currentAdminData = sessionStorage.getItem('currentAdmin');
         if (!currentAdminData) {
             window.location.href = 'admin-login.html';
+            throw new Error('Not authenticated');
         }
 
         const currentAdmin = JSON.parse(currentAdminData);
         const currentAdminId = currentAdmin.id;
         const currentAdminName = currentAdmin.name;
 
-        // Update admin display
-        document.querySelector('.admin-info .admin-avatar').textContent = currentAdmin.name.charAt(0);
-        document.querySelectorAll('.admin-info > div > div')[0].textContent = currentAdmin.name;
+        // Update admin display (wait for DOM to be ready)
+        window.addEventListener('DOMContentLoaded', function() {
+            const adminAvatar = document.querySelector('.admin-info .admin-avatar');
+            const adminNameElement = document.querySelectorAll('.admin-info > div > div')[0];
+            
+            if (adminAvatar) adminAvatar.textContent = currentAdmin.name.charAt(0);
+            if (adminNameElement) adminNameElement.textContent = currentAdmin.name;
+        });
 
         // Logout function
         window.logout = function() {
@@ -1265,22 +1271,35 @@
         };
 
         // Switch navigation tabs
-        window.switchTab = function(tabName) {
+        window.switchTab = function(tabName, clickedElement) {
             // Close mobile menu
             const sidebar = document.getElementById('sidebar');
-            sidebar.classList.remove('mobile-show');
+            if (sidebar) sidebar.classList.remove('mobile-show');
 
             // Update navigation
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
             });
-            event.target.closest('.nav-item').classList.add('active');
+            
+            // Add active class to clicked item
+            if (clickedElement && clickedElement.closest) {
+                clickedElement.closest('.nav-item').classList.add('active');
+            } else {
+                // Fallback: find nav item by matching onclick attribute
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    const onclick = item.getAttribute('onclick');
+                    if (onclick && onclick.includes(`'${tabName}'`)) {
+                        item.classList.add('active');
+                    }
+                });
+            }
 
             // Update content
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
             });
-            document.getElementById(tabName).classList.add('active');
+            const targetTab = document.getElementById(tabName);
+            if (targetTab) targetTab.classList.add('active');
 
             // Update page title
             const titles = {
@@ -1290,7 +1309,8 @@
                 'reports': 'รายงานสรุป',
                 'settings': 'ตั้งค่า'
             };
-            document.getElementById('pageTitle').textContent = titles[tabName];
+            const pageTitle = document.getElementById('pageTitle');
+            if (pageTitle) pageTitle.textContent = titles[tabName];
 
             // Load data for specific tabs
             if (tabName === 'approvals') loadApprovalsData();
@@ -1383,56 +1403,44 @@
                     if (doc.data().role === 'teacher') totalPersonnel++;
                 });
 
-                // Get all leaves to process
-                const allLeavesSnapshot = await getDocs(collection(db, 'leaves'));
-                
                 // Count pending leaves
-                let pendingCount = 0;
-                
+                const pendingQuery = query(collection(db, 'leaves'), where('status', '==', 'รออนุมัติ'));
+                const pendingSnapshot = await getDocs(pendingQuery);
+                const pendingCount = pendingSnapshot.size || 0;
+
                 // Count approved leaves this month
                 const now = new Date();
-                const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                let approvedCount = 0;
-                
+                const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+                const approvedQuery = query(
+                    collection(db, 'leaves'),
+                    where('status', '==', 'อนุมัติแล้ว'),
+                    where('approvedDate', '>=', firstDayOfMonth)
+                );
+                const approvedSnapshot = await getDocs(approvedQuery);
+                const approvedCount = approvedSnapshot.size || 0;
+
                 // Count leaves today
                 const todayStart = new Date();
                 todayStart.setHours(0, 0, 0, 0);
                 const todayEnd = new Date();
                 todayEnd.setHours(23, 59, 59, 999);
+                
                 let todayCount = 0;
-
-                // Process all leaves
+                const allLeavesSnapshot = await getDocs(collection(db, 'leaves'));
                 allLeavesSnapshot.forEach(doc => {
                     const leave = doc.data();
-                    
-                    // Count pending
-                    if (leave.status === 'รออนุมัติ') {
-                        pendingCount++;
-                    }
-                    
-                    // Count approved this month
-                    if (leave.status === 'อนุมัติแล้ว' && leave.approvedDate) {
-                        const approvedDate = new Date(leave.approvedDate);
-                        if (approvedDate >= firstDayOfMonth) {
-                            approvedCount++;
-                        }
-                    }
-                    
-                    // Count leaves today
-                    if (leave.status === 'อนุมัติแล้ว') {
-                        const start = new Date(leave.startDate);
-                        const end = new Date(leave.endDate);
-                        if (start <= todayEnd && end >= todayStart) {
-                            todayCount++;
-                        }
+                    const start = new Date(leave.startDate);
+                    const end = new Date(leave.endDate);
+                    if (leave.status === 'อนุมัติแล้ว' && start <= todayEnd && end >= todayStart) {
+                        todayCount++;
                     }
                 });
 
                 // Update UI
-                document.querySelector('.stats-overview .stat-box:nth-child(1) .stat-number').textContent = totalPersonnel;
-                document.querySelector('.stats-overview .stat-box:nth-child(2) .stat-number').textContent = pendingCount;
-                document.querySelector('.stats-overview .stat-box:nth-child(3) .stat-number').textContent = approvedCount;
-                document.querySelector('.stats-overview .stat-box:nth-child(4) .stat-number').textContent = todayCount;
+                document.querySelector('.stats-overview .stat-box:nth-child(1) .stat-number').textContent = totalPersonnel || 0;
+                document.querySelector('.stats-overview .stat-box:nth-child(2) .stat-number').textContent = pendingCount || 0;
+                document.querySelector('.stats-overview .stat-box:nth-child(3) .stat-number').textContent = approvedCount || 0;
+                document.querySelector('.stats-overview .stat-box:nth-child(4) .stat-number').textContent = todayCount || 0;
             } catch (error) {
                 console.error('Error updating stats:', error);
                 // Set all to 0 on error
@@ -1558,85 +1566,61 @@
 
         // Load pending requests for dashboard
         function loadPendingRequests() {
-            try {
-                const tbody = document.getElementById('pendingRequestsTable')?.querySelector('tbody');
-                if (!tbody) {
-                    console.error('Pending requests table not found');
+            const tbody = document.getElementById('pendingRequestsTable').querySelector('tbody');
+            
+            const q = query(
+                collection(db, 'leaves'),
+                where('status', '==', 'รออนุมัติ'),
+                orderBy('submittedDate', 'desc')
+            );
+
+            onSnapshot(q, (querySnapshot) => {
+                if (querySnapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-light);">ไม่มีคำขอที่รอดำเนินการ</td></tr>';
                     return;
                 }
-                
-                // Query without orderBy to avoid index requirement
-                const q = query(
-                    collection(db, 'leaves'),
-                    where('status', '==', 'รออนุมัติ')
-                );
 
-                onSnapshot(q, (querySnapshot) => {
-                    if (querySnapshot.empty) {
-                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-light);">ไม่มีคำขอที่รอดำเนินการ</td></tr>';
-                        return;
-                    }
+                tbody.innerHTML = '';
+                querySnapshot.forEach((docSnapshot) => {
+                    const leave = docSnapshot.data();
+                    const row = document.createElement('tr');
+                    row.dataset.leaveId = docSnapshot.id;
 
-                    // Collect and sort data in JavaScript
-                    const leaves = [];
-                    querySnapshot.forEach((docSnapshot) => {
-                        leaves.push({
-                            id: docSnapshot.id,
-                            ...docSnapshot.data()
-                        });
-                    });
+                    const startDate = new Date(leave.startDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+                    const endDate = new Date(leave.endDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+                    const style = getLeaveTypeStyle(leave.type);
 
-                    // Sort by submittedDate descending (newest first)
-                    leaves.sort((a, b) => {
-                        const dateA = a.submittedDate ? new Date(a.submittedDate) : new Date(0);
-                        const dateB = b.submittedDate ? new Date(b.submittedDate) : new Date(0);
-                        return dateB - dateA;
-                    });
-
-                    tbody.innerHTML = '';
-                    leaves.forEach((leave) => {
-                        const row = document.createElement('tr');
-                        row.dataset.leaveId = leave.id;
-
-                        const startDate = new Date(leave.startDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
-                        const endDate = new Date(leave.endDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
-                        const style = getLeaveTypeStyle(leave.type);
-
-                        row.innerHTML = `
-                            <td><strong>${leave.userName}</strong></td>
-                            <td>
-                                <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: ${style.bg}; color: ${style.color}; border-radius: 16px; font-size: 0.875rem; font-weight: 500;">
-                                    <span>${style.icon}</span>
-                                    <span>${leave.type}</span>
-                                </span>
-                            </td>
-                            <td>${startDate} - ${endDate}</td>
-                            <td>${leave.days} วัน</td>
-                            <td><span class="status-badge status-pending">รออนุมัติ</span></td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn btn-success" onclick="approveLeave(this)">✓ อนุมัติ</button>
-                                    <button class="btn btn-danger" onclick="rejectLeave(this)">✗ ไม่อนุมัติ</button>
-                                </div>
-                            </td>
-                        `;
-                        tbody.appendChild(row);
-                    });
-                }, (error) => {
-                    console.error('Error loading pending requests:', error);
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--danger);">เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.message + '</td></tr>';
+                    row.innerHTML = `
+                        <td><strong>${leave.userName}</strong></td>
+                        <td>
+                            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: ${style.bg}; color: ${style.color}; border-radius: 16px; font-size: 0.875rem; font-weight: 500;">
+                                <span>${style.icon}</span>
+                                <span>${leave.type}</span>
+                            </span>
+                        </td>
+                        <td>${startDate} - ${endDate}</td>
+                        <td>${leave.days} วัน</td>
+                        <td><span class="status-badge status-pending">รออนุมัติ</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-success" onclick="approveLeave(this)">✓ อนุมัติ</button>
+                                <button class="btn btn-danger" onclick="rejectLeave(this)">✗ ไม่อนุมัติ</button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
                 });
-            } catch (error) {
-                console.error('Error in loadPendingRequests:', error);
-            }
+            });
         }
 
         // Load approvals data
         window.loadApprovalsData = function() {
             const tbody = document.getElementById('approvalsTableBody');
             
-            // Query all leaves without orderBy
-            const q = query(collection(db, 'leaves'));
+            const q = query(
+                collection(db, 'leaves'),
+                orderBy('submittedDate', 'desc')
+            );
 
             onSnapshot(q, (querySnapshot) => {
                 window.allLeaves = [];
@@ -1644,17 +1628,7 @@
                     window.allLeaves.push({ id: docSnapshot.id, ...docSnapshot.data() });
                 });
 
-                // Sort by submittedDate descending in JavaScript
-                window.allLeaves.sort((a, b) => {
-                    const dateA = a.submittedDate ? new Date(a.submittedDate) : new Date(0);
-                    const dateB = b.submittedDate ? new Date(b.submittedDate) : new Date(0);
-                    return dateB - dateA;
-                });
-
                 renderApprovalsTable(window.allLeaves);
-            }, (error) => {
-                console.error('Error loading approvals:', error);
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--danger);">เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.message + '</td></tr>';
             });
         };
 
@@ -1834,10 +1808,14 @@
                 const leavesSnapshot = await getDocs(collection(db, 'leaves'));
                 const usersSnapshot = await getDocs(collection(db, 'users'));
                 
-                // Calculate statistics - count all 11 leave types
+                // Calculate statistics - 4 main categories for display
                 let totalLeaves = 0;
+                let sickCount = 0;
+                let personalCount = 0;
+                let maternityCount = 0;
+                let othersCount = 0;
                 
-                // Full breakdown for all 11 types
+                // Full breakdown for Excel export
                 const fullLeaveCounts = {
                     'ลาป่วย': 0,
                     'ลาคลอดบุตร': 0,
@@ -1861,168 +1839,67 @@
                         if (fullLeaveCounts.hasOwnProperty(leave.type)) {
                             fullLeaveCounts[leave.type]++;
                         }
+                        
+                        // Count for 4 main categories display
+                        if (leave.type === 'ลาป่วย') {
+                            sickCount++;
+                        } else if (leave.type === 'ลากิจส่วนตัว') {
+                            personalCount++;
+                        } else if (leave.type === 'ลาคลอดบุตร') {
+                            maternityCount++;
+                        } else {
+                            othersCount++;
+                        }
                     }
                 });
 
-                // Update total leaves stat
-                const statBoxes = document.querySelectorAll('#reports .stats-overview .stat-box');
-                if (statBoxes.length > 0) {
-                    statBoxes[0].querySelector('.stat-number').textContent = totalLeaves || 0;
-                }
-
-                // Update individual leave type stats
-                const leaveTypeStats = [
-                    { type: 'ลาป่วย', index: 1 },
-                    { type: 'ลากิจส่วนตัว', index: 2 },
-                    { type: 'ลาคลอดบุตร', index: 3 }
-                ];
-                
-                leaveTypeStats.forEach(stat => {
-                    if (statBoxes[stat.index]) {
-                        statBoxes[stat.index].querySelector('.stat-number').textContent = fullLeaveCounts[stat.type] || 0;
-                    }
-                });
-                
-                // Count others (all remaining types)
-                let othersCount = 0;
-                Object.keys(fullLeaveCounts).forEach(type => {
-                    if (type !== 'ลาป่วย' && type !== 'ลากิจส่วนตัว' && type !== 'ลาคลอดบุตร') {
-                        othersCount += fullLeaveCounts[type];
-                    }
-                });
-                if (statBoxes[4]) {
-                    statBoxes[4].querySelector('.stat-number').textContent = othersCount || 0;
-                }
+                // Update statistics display (4 categories)
+                document.querySelector('#reports .stats-overview .stat-box:nth-child(1) .stat-number').textContent = totalLeaves || 0;
+                document.querySelector('#reports .stats-overview .stat-box:nth-child(2) .stat-number').textContent = sickCount || 0;
+                document.querySelector('#reports .stats-overview .stat-box:nth-child(3) .stat-number').textContent = personalCount || 0;
+                document.querySelector('#reports .stats-overview .stat-box:nth-child(4) .stat-number').textContent = maternityCount || 0;
+                document.querySelector('#reports .stats-overview .stat-box:nth-child(5) .stat-number').textContent = othersCount || 0;
 
                 // Store full breakdown for Excel export
                 window.fullLeaveBreakdown = fullLeaveCounts;
 
-                // Build user leave summary with ALL types
+                // Build user leave summary
                 const userLeaveMap = new Map();
                 
-                // Initialize all users with all 11 leave types
+                // Initialize all users
                 usersSnapshot.forEach(doc => {
                     const user = doc.data();
                     if (user.role === 'teacher') {
                         userLeaveMap.set(doc.id, {
                             name: user.name,
-                            position: user.position || '',
-                            'ลาป่วย': 0,
-                            'ลาคลอดบุตร': 0,
-                            'ลาช่วยเหลือภริยาคลอดบุตร': 0,
-                            'ลากิจส่วนตัว': 0,
-                            'ลาพักผ่อน': 0,
-                            'ลาอุปสมบท': 0,
-                            'ลาศึกษา': 0,
-                            'ลาปฏิบัติงานองค์การระหว่างประเทศ': 0,
-                            'ลาฟื้นฟูสมรรถภาพ': 0,
-                            'ลาติดตามคู่สมรส': 0,
-                            'ลาปฏิบัติงานในหน่วยงานอื่น': 0,
+                            sick: 0,
+                            personal: 0,
+                            vacation: 0,
                             total: 0
                         });
                     }
                 });
 
-                // Count approved leaves for all types
+                // Count approved leaves (keep original 3 categories for table)
                 leavesSnapshot.forEach(doc => {
                     const leave = doc.data();
                     if (leave.status === 'อนุมัติแล้ว' && userLeaveMap.has(leave.userId)) {
                         const userLeave = userLeaveMap.get(leave.userId);
-                        if (userLeave.hasOwnProperty(leave.type)) {
-                            userLeave[leave.type] += leave.days;
-                            userLeave.total += leave.days;
-                        }
+                        if (leave.type === 'ลาป่วย') userLeave.sick += leave.days;
+                        else if (leave.type === 'ลากิจส่วนตัว') userLeave.personal += leave.days;
+                        else if (leave.type === 'ลาพักผ่อน') userLeave.vacation += leave.days;
+                        userLeave.total += leave.days; // Count all types in total
                     }
                 });
 
-                // Determine which leave types are actually used
-                const usedLeaveTypes = new Set();
-                userLeaveMap.forEach(user => {
-                    Object.keys(fullLeaveCounts).forEach(type => {
-                        if (user[type] > 0) {
-                            usedLeaveTypes.add(type);
-                        }
-                    });
-                });
-
-                // Always show these 3 main types
-                const mainTypes = ['ลาป่วย', 'ลากิจส่วนตัว', 'ลาพักผ่อน'];
-                mainTypes.forEach(type => usedLeaveTypes.add(type));
-
-                // Create table headers dynamically
-                const leaveTypeNames = {
-                    'ลาป่วย': 'ลาป่วย',
-                    'ลาคลอดบุตร': 'ลาคลอด',
-                    'ลาช่วยเหลือภริยาคลอดบุตร': 'ลาช่วยภริยา',
-                    'ลากิจส่วนตัว': 'ลากิจ',
-                    'ลาพักผ่อน': 'ลาพักผ่อน',
-                    'ลาอุปสมบท': 'ลาอุปสมบท',
-                    'ลาศึกษา': 'ลาศึกษา',
-                    'ลาปฏิบัติงานองค์การระหว่างประเทศ': 'ลาองค์การฯ',
-                    'ลาฟื้นฟูสมรรถภาพ': 'ลาฟื้นฟู',
-                    'ลาติดตามคู่สมรส': 'ลาติดตามคู่',
-                    'ลาปฏิบัติงานในหน่วยงานอื่น': 'ลาปฏิบัติงานอื่น'
-                };
-
-                const orderedTypes = [
-                    'ลาป่วย',
-                    'ลาคลอดบุตร',
-                    'ลาช่วยเหลือภริยาคลอดบุตร',
-                    'ลากิจส่วนตัว',
-                    'ลาพักผ่อน',
-                    'ลาอุปสมบท',
-                    'ลาศึกษา',
-                    'ลาปฏิบัติงานองค์การระหว่างประเทศ',
-                    'ลาฟื้นฟูสมรรถภาพ',
-                    'ลาติดตามคู่สมรส',
-                    'ลาปฏิบัติงานในหน่วยงานอื่น'
-                ];
-
-                const displayTypes = orderedTypes.filter(type => usedLeaveTypes.has(type));
-
-                // Build table
-                const table = document.getElementById('reportsTable');
-                const thead = table.querySelector('thead');
-                const tbody = table.querySelector('tbody');
-
-                // Build header
-                let headerHTML = '<tr><th>ลำดับ</th><th>ชื่อ-นามสกุล</th>';
-                displayTypes.forEach(type => {
-                    headerHTML += `<th>${leaveTypeNames[type]}<br>(วัน)</th>`;
-                });
-                headerHTML += '<th>รวมทั้งหมด<br>(วัน)</th></tr>';
-                thead.innerHTML = headerHTML;
-
                 // Populate table
+                const tbody = document.querySelector('#reportsTable tbody');
                 if (userLeaveMap.size === 0) {
-                    const colspan = 3 + displayTypes.length;
-                    tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center; padding: 40px; color: var(--text-light);">ยังไม่มีข้อมูลบุคลากร</td></tr>`;
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-light);">ยังไม่มีข้อมูลบุคลากร</td></tr>';
                     return;
                 }
 
                 const sortedUsers = Array.from(userLeaveMap.values()).sort((a, b) => b.total - a.total);
-                
-                let bodyHTML = '';
-                sortedUsers.forEach((user, index) => {
-                    bodyHTML += `<tr><td>${index + 1}</td><td><strong>${user.name}</strong></td>`;
-                    displayTypes.forEach(type => {
-                        const days = user[type] || 0;
-                        bodyHTML += `<td>${days}</td>`;
-                    });
-                    bodyHTML += `<td><strong>${user.total}</strong></td></tr>`;
-                });
-                tbody.innerHTML = bodyHTML;
-
-                // Set default date for daily leave to today
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('dailyLeaveDate').value = today;
-                
-            } catch (error) {
-                console.error('Error loading reports:', error);
-                document.querySelector('#reportsTable tbody').innerHTML = 
-                    '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--danger);">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>';
-            }
-        };
                 
                 tbody.innerHTML = sortedUsers.map((user, index) => `
                     <tr>
@@ -2446,27 +2323,19 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', async function() {
-            try {
-                // Load real-time data
-                await updateDashboardStats();
-                loadPendingRequests();
-                
-                // Set default dates for report
-                const today = new Date();
-                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-                
-                const reportStartDate = document.getElementById('reportStartDate');
-                const reportEndDate = document.getElementById('reportEndDate');
-                const dailyReportDate = document.getElementById('dailyReportDate');
-                
-                if (reportStartDate) reportStartDate.valueAsDate = firstDay;
-                if (reportEndDate) reportEndDate.valueAsDate = today;
-                if (dailyReportDate) dailyReportDate.valueAsDate = today;
-                
-                console.log('Admin dashboard initialized successfully');
-            } catch (error) {
-                console.error('Error initializing dashboard:', error);
-            }
+            // Load real-time data
+            updateDashboardStats();
+            loadPendingRequests();
+            
+            // Set default dates for report
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            document.getElementById('reportStartDate').valueAsDate = firstDay;
+            document.getElementById('reportEndDate').valueAsDate = today;
+            
+            // Set default date for daily report in dashboard
+            document.getElementById('dailyReportDate').valueAsDate = today;
+            loadDailyReport();
         });
     </script>
 </body>
