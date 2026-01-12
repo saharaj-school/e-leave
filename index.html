@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เข้าสู่ระบบ - ระบบการลาข้าราชการครู</title>
+    <title>เข้าสู่ระบบ - ระบบการลาอิเล็กทรอนิกส์ โรงเรียนสหราษฎร์รังสฤษดิ์</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -16,6 +16,7 @@
             --primary: #2563eb;
             --primary-dark: #1e40af;
             --danger: #ef4444;
+            --success: #10b981;
             --bg: #f8fafc;
             --surface: #ffffff;
             --text: #1e293b;
@@ -27,43 +28,200 @@
             font-family: 'Kanit', -apple-system, BlinkMacSystemFont, sans-serif;
             background: #f5f5f5;
             min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            padding: 20px 40px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo-container {
+            width: 80px;
+            height: 80px;
+            background: var(--primary);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            font-size: 3rem;
+            flex-shrink: 0;
         }
 
+        .header-text {
+            flex: 1;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .header-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-weight: 400;
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 40px;
+            display: grid;
+            grid-template-columns: 1fr 450px;
+            gap: 30px;
+            align-items: start;
+        }
+
+        /* Left Sidebar - Leave Summary */
+        .leave-summary {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .summary-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .summary-icon {
+            font-size: 2rem;
+        }
+
+        .summary-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--bg);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .today-leaves {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 2px solid var(--border);
+        }
+
+        .today-header {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .leave-item {
+            background: var(--bg);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .leave-name {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 5px;
+        }
+
+        .leave-type {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .no-leaves {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .no-leaves-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        /* Right Side - Login Form */
         .login-container {
             background: white;
             padding: 40px;
             border-radius: 12px;
-            max-width: 400px;
-            width: 100%;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
-        .logo {
+        .login-header {
             text-align: center;
             margin-bottom: 32px;
         }
 
-        .logo-icon {
+        .login-icon {
             font-size: 3rem;
             margin-bottom: 16px;
         }
 
-        h1 {
+        .login-title {
             font-size: 1.5rem;
             font-weight: 600;
             color: var(--text);
             margin-bottom: 8px;
-            text-align: center;
         }
 
-        .subtitle {
-            text-align: center;
+        .login-subtitle {
             color: var(--text-light);
-            margin-bottom: 32px;
             font-size: 0.875rem;
         }
 
@@ -193,50 +351,165 @@
             100% { transform: rotate(360deg); }
         }
 
-        @media (max-width: 576px) {
-            .login-container {
-                padding: 32px 24px;
+        .loading-text {
+            margin-top: 12px;
+            color: var(--text-light);
+            font-size: 0.875rem;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                padding: 0 20px;
             }
 
-            h1 {
-                font-size: 1.25rem;
+            .login-container {
+                order: -1;
+            }
+
+            .header {
+                padding: 15px 20px;
+            }
+
+            .logo-container {
+                width: 60px;
+                height: 60px;
+                font-size: 2rem;
+            }
+
+            .header-title {
+                font-size: 1.1rem;
+            }
+
+            .header-subtitle {
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .login-container {
+                padding: 30px 20px;
+            }
+
+            .leave-summary {
+                padding: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-content {
+                gap: 12px;
+            }
+
+            .logo-container {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+
+            .header-title {
+                font-size: 0.95rem;
+            }
+
+            .header-subtitle {
+                font-size: 0.75rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="logo">
-            <div class="logo-icon">📋</div>
-            <h1>ระบบการลา</h1>
-            <p class="subtitle">ข้าราชการครูและบุคลากรทางการศึกษา</p>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="logo-container">
+                📚
+            </div>
+            <div class="header-text">
+                <div class="header-title">ระบบการลาอิเล็กทรอนิกส์ โรงเรียนสหราษฎร์รังสฤษดิ์</div>
+                <div class="header-subtitle">อำเภอศรีสงคราม จังหวัดนครพนม สำนักงานเขตพื้นที่การศึกษามัธยมศึกษานครพนม</div>
+            </div>
         </div>
+    </div>
 
-        <div id="errorMessage" class="error-message"></div>
-        
-        <div id="loadingDiv" class="loading">
-            <div class="spinner"></div>
-            <p style="margin-top: 12px; color: var(--text-light); font-size: 0.875rem;">กำลังเข้าสู่ระบบ...</p>
-        </div>
-
-        <form id="loginForm">
-            <div class="form-group">
-                <label>ชื่อผู้ใช้</label>
-                <input type="text" id="username" placeholder="กรอกชื่อผู้ใช้" required autocomplete="username">
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Left Side - Leave Summary -->
+        <div class="leave-summary">
+            <div class="summary-header">
+                <span class="summary-icon">📊</span>
+                <h2 class="summary-title">สรุปการลา</h2>
             </div>
 
-            <div class="form-group">
-                <label>รหัสผ่าน</label>
-                <input type="password" id="password" placeholder="กรอกรหัสผ่าน" required autocomplete="current-password">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalPersonnel">0</div>
+                    <div class="stat-label">จำนวนบุคลากร</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="pendingLeaves">0</div>
+                    <div class="stat-label">รออนุมัติ</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="approvedThisMonth">0</div>
+                    <div class="stat-label">อนุมัติเดือนนี้</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="leavingToday">0</div>
+                    <div class="stat-label">ลาวันนี้</div>
+                </div>
             </div>
 
-            <button type="submit" class="btn">เข้าสู่ระบบ</button>
-        </form>
+            <div class="today-leaves">
+                <div class="today-header">
+                    <span>📅</span>
+                    <span>บุคลากรที่ลาวันนี้</span>
+                </div>
+                <div id="todayLeavesList">
+                    <div class="no-leaves">
+                        <div class="no-leaves-icon">✅</div>
+                        <div>กำลังโหลดข้อมูล...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <div class="divider">หรือ</div>
+        <!-- Right Side - Login Form -->
+        <div class="login-container">
+            <div class="login-header">
+                <div class="login-icon">🔐</div>
+                <h1 class="login-title">เข้าสู่ระบบ</h1>
+                <p class="login-subtitle">ข้าราชการครูและบุคลากรทางการศึกษา</p>
+            </div>
 
-        <div class="admin-link">
-            <a href="admin-login.html">เข้าสู่ระบบสำหรับผู้ดูแลระบบ →</a>
+            <div id="errorMessage" class="error-message"></div>
+            
+            <div id="loadingDiv" class="loading">
+                <div class="spinner"></div>
+                <p class="loading-text">กำลังเข้าสู่ระบบ...</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>ชื่อผู้ใช้</label>
+                    <input type="text" id="username" placeholder="กรอกชื่อผู้ใช้" required autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label>รหัสผ่าน</label>
+                    <input type="password" id="password" placeholder="กรอกรหัสผ่าน" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn">เข้าสู่ระบบ</button>
+            </form>
+
+            <div class="divider">หรือ</div>
+
+            <div class="admin-link">
+                <a href="admin-login.html">เข้าสู่ระบบสำหรับผู้ดูแลระบบ →</a>
+            </div>
         </div>
     </div>
 
@@ -258,6 +531,118 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const analytics = getAnalytics(app);
+
+        // Get leave type style
+        function getLeaveTypeIcon(type) {
+            const icons = {
+                'ลาป่วย': '🏥',
+                'ลาคลอดบุตร': '👶',
+                'ลาช่วยเหลือภริยาคลอดบุตร': '🤱',
+                'ลากิจส่วนตัว': '📝',
+                'ลาพักผ่อน': '🏖️',
+                'ลาอุปสมบท': '🙏',
+                'ลาศึกษา': '📚',
+                'ลาปฏิบัติงานองค์การระหว่างประเทศ': '🌏',
+                'ลาฟื้นฟูสมรรถภาพ': '💪',
+                'ลาติดตามคู่สมรส': '✈️',
+                'ลาปฏิบัติงานในหน่วยงานอื่น': '🏛️'
+            };
+            return icons[type] || '📋';
+        }
+
+        // Load dashboard stats
+        async function loadDashboardStats() {
+            try {
+                // Count total personnel
+                const usersSnapshot = await getDocs(collection(db, 'users'));
+                let totalPersonnel = 0;
+                usersSnapshot.forEach(docSnap => {
+                    const userData = docSnap.data();
+                    if (userData.role === 'teacher') {
+                        totalPersonnel++;
+                    }
+                });
+
+                // Count pending leaves
+                const pendingQuery = query(collection(db, 'leaves'), where('status', '==', 'รออนุมัติ'));
+                const pendingSnapshot = await getDocs(pendingQuery);
+                const pendingCount = pendingSnapshot.size;
+
+                // Count approved this month
+                const now = new Date();
+                const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                firstDayOfMonth.setHours(0, 0, 0, 0);
+                
+                let approvedCount = 0;
+                const allLeavesSnapshot = await getDocs(collection(db, 'leaves'));
+                
+                allLeavesSnapshot.forEach(docSnap => {
+                    const leave = docSnap.data();
+                    if (leave.status === 'อนุมัติแล้ว' && leave.approvedDate) {
+                        const approvedDate = new Date(leave.approvedDate);
+                        if (approvedDate >= firstDayOfMonth) {
+                            approvedCount++;
+                        }
+                    }
+                });
+
+                // Count today's leaves
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+                const todayEnd = new Date();
+                todayEnd.setHours(23, 59, 59, 999);
+                
+                const todayLeaves = [];
+                allLeavesSnapshot.forEach(docSnap => {
+                    const leave = docSnap.data();
+                    if (leave.status === 'อนุมัติแล้ว') {
+                        const start = new Date(leave.startDate);
+                        const end = new Date(leave.endDate);
+                        start.setHours(0, 0, 0, 0);
+                        end.setHours(23, 59, 59, 999);
+                        if (start <= todayEnd && end >= todayStart) {
+                            todayLeaves.push({
+                                name: leave.userName,
+                                type: leave.type,
+                                days: leave.days
+                            });
+                        }
+                    }
+                });
+
+                // Update stats
+                document.getElementById('totalPersonnel').textContent = totalPersonnel;
+                document.getElementById('pendingLeaves').textContent = pendingCount;
+                document.getElementById('approvedThisMonth').textContent = approvedCount;
+                document.getElementById('leavingToday').textContent = todayLeaves.length;
+
+                // Update today's leaves list
+                const todayLeavesList = document.getElementById('todayLeavesList');
+                if (todayLeaves.length === 0) {
+                    todayLeavesList.innerHTML = `
+                        <div class="no-leaves">
+                            <div class="no-leaves-icon">✅</div>
+                            <div>ไม่มีบุคลากรลาในวันนี้</div>
+                        </div>
+                    `;
+                } else {
+                    todayLeavesList.innerHTML = todayLeaves.map(leave => `
+                        <div class="leave-item">
+                            <div class="leave-name">${leave.name}</div>
+                            <div class="leave-type">
+                                <span>${getLeaveTypeIcon(leave.type)}</span>
+                                <span>${leave.type} (${leave.days} วัน)</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load stats on page load
+        loadDashboardStats();
 
         function showError(message) {
             const errorDiv = document.getElementById('errorMessage');
