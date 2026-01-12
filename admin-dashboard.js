@@ -394,6 +394,118 @@
             }
         };
 
+        // Load daily trip report
+        window.loadDailyTrip = async function() {
+            const selectedDate = document.getElementById('dailyTripDate').value;
+            if (!selectedDate) {
+                alert('⚠️ กรุณาเลือกวันที่');
+                return;
+            }
+
+            const reportDiv = document.getElementById('dailyTripContent');
+            reportDiv.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-light);"><div style="border: 2px solid var(--border); border-top: 2px solid var(--primary); border-radius: 50%; width: 32px; height: 32px; animation: spin 0.8s linear infinite; margin: 0 auto 10px;"></div>กำลังโหลด...</div>';
+
+            try {
+                const tripsSnapshot = await getDocs(collection(db, 'official_trips'));
+                const selectedDateObj = new Date(selectedDate);
+                selectedDateObj.setHours(0, 0, 0, 0);
+                
+                const tripsOnDate = [];
+                
+                tripsSnapshot.forEach(docSnap => {
+                    const trip = docSnap.data();
+                    
+                    // Check both old format (date) and new format (startDate/endDate)
+                    let isOnDate = false;
+                    
+                    if (trip.startDate && trip.endDate) {
+                        const startDate = new Date(trip.startDate);
+                        const endDate = new Date(trip.endDate);
+                        startDate.setHours(0, 0, 0, 0);
+                        endDate.setHours(0, 0, 0, 0);
+                        
+                        if (selectedDateObj >= startDate && selectedDateObj <= endDate) {
+                            isOnDate = true;
+                        }
+                    } else if (trip.date) {
+                        const tripDate = new Date(trip.date);
+                        tripDate.setHours(0, 0, 0, 0);
+                        
+                        if (selectedDateObj.getTime() === tripDate.getTime()) {
+                            isOnDate = true;
+                        }
+                    }
+                    
+                    if (isOnDate) {
+                        tripsOnDate.push({ id: docSnap.id, ...trip });
+                    }
+                });
+
+                const displayDate = selectedDateObj.toLocaleDateString('th-TH', { 
+                    weekday: 'long',
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+
+                if (tripsOnDate.length === 0) {
+                    reportDiv.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <div style="font-size: 3rem; margin-bottom: 10px;">✅</div>
+                            <div style="font-size: 1.1rem; font-weight: 600; color: var(--text); margin-bottom: 5px;">
+                                ${displayDate}
+                            </div>
+                            <div style="color: var(--success); font-weight: 600;">
+                                ไม่มีบุคลากรไปราชการในวันนี้
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    let html = `
+                        <div style="padding: 20px;">
+                            <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--border);">
+                                <div style="font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 5px;">
+                                    📅 ${displayDate}
+                                </div>
+                                <div style="font-size: 1.3rem; font-weight: 700; color: var(--primary);">
+                                    มีบุคลากรไปราชการ ${tripsOnDate.length} คน
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>ลำดับ</th>
+                                            <th>ชื่อ-นามสกุล</th>
+                                            <th>เรื่อง</th>
+                                            <th>สถานที่</th>
+                                            <th>วัตถุประสงค์</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                    `;
+
+                    tripsOnDate.forEach((trip, index) => {
+                        html += `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td><strong>${trip.userName}</strong></td>
+                                <td>${trip.subject || '-'}</td>
+                                <td>${trip.location}</td>
+                                <td style="max-width: 400px;">${trip.purpose}</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += `</tbody></table></div></div>`;
+                    reportDiv.innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error loading daily trip report:', error);
+                reportDiv.innerHTML = '<div style="text-align: center; color: var(--danger); padding: 40px;">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>';
+            }
+        };
+
         // Load pending requests
         function loadPendingRequests() {
             const tbody = document.getElementById('pendingRequestsTable').querySelector('tbody');
@@ -1174,7 +1286,7 @@
 
         // Initialize event listeners
         function initializeEventListeners() {
-            // Edit personnel form - UPDATED (REMOVED USED DAYS SAVING)
+            // Edit personnel form - SAVE BOTH USED AND REMAINING DAYS
             document.getElementById('editPersonnelForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
@@ -1205,7 +1317,7 @@
                         position: document.getElementById('editPosition').value,
                         department: document.getElementById('editDepartment').value,
                         username: newUsername,
-                        // Only save remaining leave days (used days are calculated from database)
+                        // Save both remaining and used leave days
                         sickLeaveRemaining: parseInt(document.getElementById('editSickLeave').value) || 30,
                         maternityLeaveRemaining: parseInt(document.getElementById('editMaternityLeave').value) || 90,
                         helpWifeLeaveRemaining: parseInt(document.getElementById('editHelpWifeLeave').value) || 15,
@@ -1217,6 +1329,18 @@
                         rehabLeaveRemaining: parseInt(document.getElementById('editRehabLeave').value) || 180,
                         followSpouseLeaveRemaining: parseInt(document.getElementById('editFollowSpouseLeave').value) || 365,
                         workOtherLeaveRemaining: parseInt(document.getElementById('editWorkOtherLeave').value) || 365,
+                        // Used leave days (manual override allowed)
+                        sickLeaveUsed: parseInt(document.getElementById('editSickLeaveUsed').value) || 0,
+                        maternityLeaveUsed: parseInt(document.getElementById('editMaternityLeaveUsed').value) || 0,
+                        helpWifeLeaveUsed: parseInt(document.getElementById('editHelpWifeLeaveUsed').value) || 0,
+                        personalLeaveUsed: parseInt(document.getElementById('editPersonalLeaveUsed').value) || 0,
+                        vacationLeaveUsed: parseInt(document.getElementById('editVacationLeaveUsed').value) || 0,
+                        ordinationLeaveUsed: parseInt(document.getElementById('editOrdinationLeaveUsed').value) || 0,
+                        studyLeaveUsed: parseInt(document.getElementById('editStudyLeaveUsed').value) || 0,
+                        internationalLeaveUsed: parseInt(document.getElementById('editInternationalLeaveUsed').value) || 0,
+                        rehabLeaveUsed: parseInt(document.getElementById('editRehabLeaveUsed').value) || 0,
+                        followSpouseLeaveUsed: parseInt(document.getElementById('editFollowSpouseLeaveUsed').value) || 0,
+                        workOtherLeaveUsed: parseInt(document.getElementById('editWorkOtherLeaveUsed').value) || 0,
                         email: document.getElementById('editEmail').value,
                         phone: document.getElementById('editPhone').value,
                         updatedAt: new Date().toISOString(),
@@ -1323,17 +1447,142 @@
             updateAdminDisplay();
             updateDashboardStats();
             loadPendingRequests();
+            loadOfficialTripsData();
+            loadLateArrivalsData();
             
             const today = new Date();
             const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
             document.getElementById('reportStartDate').valueAsDate = firstDay;
             document.getElementById('reportEndDate').valueAsDate = today;
             
+            // Set today for daily reports
             document.getElementById('dailyReportDate').valueAsDate = today;
+            document.getElementById('dailyTripDate').valueAsDate = today;
+            
+            // Load today's reports by default
             loadDailyReport();
+            loadDailyTrip();
             
             initializeEventListeners();
         }
+
+        // Load official trips data
+        function loadOfficialTripsData() {
+            const tbody = document.getElementById('officialTripsTableBody');
+            
+            const q = query(
+                collection(db, 'official_trips'),
+                orderBy('submittedDate', 'desc')
+            );
+
+            onSnapshot(q, (querySnapshot) => {
+                if (querySnapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--text-light);">ไม่มีข้อมูล</td></tr>';
+                    return;
+                }
+
+                const trips = [];
+                querySnapshot.forEach((docSnapshot) => {
+                    trips.push({ id: docSnapshot.id, ...docSnapshot.data() });
+                });
+
+                tbody.innerHTML = trips.map(trip => {
+                    const submittedDate = trip.submittedDate ? new Date(trip.submittedDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '-';
+                    
+                    // Support both old format (date) and new format (startDate/endDate)
+                    let dateDisplay = '';
+                    if (trip.startDate && trip.endDate) {
+                        const start = new Date(trip.startDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+                        const end = new Date(trip.endDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+                        dateDisplay = trip.startDate === trip.endDate ? start : `${start} - ${end}`;
+                        if (trip.days && trip.days > 1) {
+                            dateDisplay += ` (${trip.days} วัน)`;
+                        }
+                    } else if (trip.date) {
+                        dateDisplay = new Date(trip.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+                    }
+
+                    return `
+                        <tr>
+                            <td>${submittedDate}</td>
+                            <td><strong>${trip.userName}</strong></td>
+                            <td>${trip.subject || '-'}</td>
+                            <td>${dateDisplay}</td>
+                            <td>${trip.location}</td>
+                            <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${trip.purpose}</td>
+                            <td><span class="status-badge status-approved">${trip.status}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }, (error) => {
+                console.error('Error loading official trips:', error);
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--danger);">เกิดข้อผิดพลาด: ' + error.message + '</td></tr>';
+            });
+        }
+
+        // Load late arrivals data
+        function loadLateArrivalsData() {
+            const tbody = document.getElementById('lateArrivalsTableBody');
+            
+            const q = query(
+                collection(db, 'late_arrivals'),
+                orderBy('submittedDate', 'desc')
+            );
+
+            onSnapshot(q, (querySnapshot) => {
+                if (querySnapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-light);">ไม่มีข้อมูล</td></tr>';
+                    return;
+                }
+
+                const lates = [];
+                querySnapshot.forEach((docSnapshot) => {
+                    lates.push({ id: docSnapshot.id, ...docSnapshot.data() });
+                });
+
+                tbody.innerHTML = lates.map(late => {
+                    const submittedDate = late.submittedDate ? new Date(late.submittedDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '-';
+                    const date = late.date ? new Date(late.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+
+                    return `
+                        <tr>
+                            <td>${submittedDate}</td>
+                            <td><strong>${late.userName}</strong></td>
+                            <td>${date}</td>
+                            <td>${late.arrivalTime} น.</td>
+                            <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${late.reason}</td>
+                            <td><span class="status-badge status-approved">${late.status}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }, (error) => {
+                console.error('Error loading late arrivals:', error);
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--danger);">เกิดข้อผิดพลาด: ' + error.message + '</td></tr>';
+            });
+        }
+
+        // Filter functions for official trips and late arrivals
+        window.filterOfficialTrips = function(searchText) {
+            const rows = document.querySelectorAll('#officialTripsTableBody tr');
+            rows.forEach(row => {
+                const nameCell = row.cells[1];
+                if (nameCell) {
+                    const name = nameCell.textContent.toLowerCase();
+                    row.style.display = name.includes(searchText.toLowerCase()) ? '' : 'none';
+                }
+            });
+        };
+
+        window.filterLateArrivals = function(searchText) {
+            const rows = document.querySelectorAll('#lateArrivalsTableBody tr');
+            rows.forEach(row => {
+                const nameCell = row.cells[1];
+                if (nameCell) {
+                    const name = nameCell.textContent.toLowerCase();
+                    row.style.display = name.includes(searchText.toLowerCase()) ? '' : 'none';
+                }
+            });
+        };
 
         // Wait for DOM to be ready
         if (document.readyState === 'loading') {
