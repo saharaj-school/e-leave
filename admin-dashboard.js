@@ -239,12 +239,20 @@
                 const pendingQuery = query(collection(db, 'leaves'), where('status', '==', 'รออนุมัติ'));
                 const pendingSnapshot = await getDocs(pendingQuery);
                 const pendingCount = pendingSnapshot.size;
+                
+                // Calculate pending days
+                let pendingDays = 0;
+                pendingSnapshot.forEach(docSnap => {
+                    const leave = docSnap.data();
+                    pendingDays += leave.days || 0;
+                });
 
                 const now = new Date();
                 const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
                 firstDayOfMonth.setHours(0, 0, 0, 0);
                 
                 let approvedCount = 0;
+                let approvedDays = 0;
                 const allLeavesSnapshot = await getDocs(collection(db, 'leaves'));
                 
                 allLeavesSnapshot.forEach(docSnap => {
@@ -253,6 +261,7 @@
                         const approvedDate = new Date(leave.approvedDate);
                         if (approvedDate >= firstDayOfMonth) {
                             approvedCount++;
+                            approvedDays += leave.days || 0;
                         }
                     }
                 });
@@ -277,11 +286,19 @@
                 });
 
                 const statBoxes = document.querySelectorAll('.stats-overview .stat-box .stat-number');
+                const statSubnumbers = document.querySelectorAll('.stats-overview .stat-box .stat-subnumber');
+                
                 if (statBoxes.length >= 4) {
                     statBoxes[0].textContent = totalPersonnel;
                     statBoxes[1].textContent = pendingCount;
                     statBoxes[2].textContent = approvedCount;
                     statBoxes[3].textContent = todayCount;
+                }
+                
+                // Update subnumbers (days)
+                if (statSubnumbers.length >= 2) {
+                    statSubnumbers[0].textContent = `${pendingDays} วัน`;
+                    statSubnumbers[1].textContent = `${approvedDays} วัน`;
                 }
             } catch (error) {
                 console.error('Error updating stats:', error);
@@ -1185,7 +1202,7 @@
             }
         };
 
-        // Export to Excel - UPDATED WITH ALL 11 LEAVE TYPES
+        // Export to Excel - UPDATED WITH TIMES AND DAYS
         window.exportToExcel = async function() {
             try {
                 const startDate = document.getElementById('reportStartDate').value;
@@ -1207,18 +1224,20 @@
                         userLeaveDetail.set(docSnap.id, {
                             name: user.name,
                             position: user.position || '',
-                            sick: 0,
-                            maternity: 0,
-                            helpWife: 0,
-                            personal: 0,
-                            vacation: 0,
-                            ordination: 0,
-                            study: 0,
-                            international: 0,
-                            rehab: 0,
-                            followSpouse: 0,
-                            workOther: 0,
-                            total: 0
+                            // Each leave type has count and days
+                            sick: { count: 0, days: 0 },
+                            maternity: { count: 0, days: 0 },
+                            helpWife: { count: 0, days: 0 },
+                            personal: { count: 0, days: 0 },
+                            vacation: { count: 0, days: 0 },
+                            ordination: { count: 0, days: 0 },
+                            study: { count: 0, days: 0 },
+                            international: { count: 0, days: 0 },
+                            rehab: { count: 0, days: 0 },
+                            followSpouse: { count: 0, days: 0 },
+                            workOther: { count: 0, days: 0 },
+                            totalCount: 0,
+                            totalDays: 0
                         });
                     }
                 });
@@ -1235,32 +1254,129 @@
                             const userLeave = userLeaveDetail.get(leave.userId);
                             const days = leave.days || 0;
                             
+                            let leaveType = null;
                             switch(leave.type) {
-                                case 'ลาป่วย': userLeave.sick += days; break;
-                                case 'ลาคลอดบุตร': userLeave.maternity += days; break;
-                                case 'ลาช่วยเหลือภริยาคลอดบุตร': userLeave.helpWife += days; break;
-                                case 'ลากิจส่วนตัว': userLeave.personal += days; break;
-                                case 'ลาพักผ่อน': userLeave.vacation += days; break;
-                                case 'ลาอุปสมบท': userLeave.ordination += days; break;
-                                case 'ลาศึกษา': userLeave.study += days; break;
-                                case 'ลาปฏิบัติงานองค์การระหว่างประเทศ': userLeave.international += days; break;
-                                case 'ลาฟื้นฟูสมรรถภาพ': userLeave.rehab += days; break;
-                                case 'ลาติดตามคู่สมรส': userLeave.followSpouse += days; break;
-                                case 'ลาปฏิบัติงานในหน่วยงานอื่น': userLeave.workOther += days; break;
+                                case 'ลาป่วย': leaveType = 'sick'; break;
+                                case 'ลาคลอดบุตร': leaveType = 'maternity'; break;
+                                case 'ลาช่วยเหลือภริยาคลอดบุตร': leaveType = 'helpWife'; break;
+                                case 'ลากิจส่วนตัว': leaveType = 'personal'; break;
+                                case 'ลาพักผ่อน': leaveType = 'vacation'; break;
+                                case 'ลาอุปสมบท': leaveType = 'ordination'; break;
+                                case 'ลาศึกษา': leaveType = 'study'; break;
+                                case 'ลาปฏิบัติงานองค์การระหว่างประเทศ': leaveType = 'international'; break;
+                                case 'ลาฟื้นฟูสมรรถภาพ': leaveType = 'rehab'; break;
+                                case 'ลาติดตามคู่สมรส': leaveType = 'followSpouse'; break;
+                                case 'ลาปฏิบัติงานในหน่วยงานอื่น': leaveType = 'workOther'; break;
                             }
-                            userLeave.total += days;
+                            
+                            if (leaveType) {
+                                userLeave[leaveType].count++;
+                                userLeave[leaveType].days += days;
+                                userLeave.totalCount++;
+                                userLeave.totalDays += days;
+                            }
                         }
                     }
                 });
 
+                // Create beautiful Excel-like CSV with merged headers
                 let csv = '\uFEFF';
-                csv += 'ลำดับ,ชื่อ-นามสกุล,ตำแหน่ง,ลาป่วย,ลาคลอดบุตร,ลาช่วยภริยา,ลากิจส่วนตัว,ลาพักผ่อน,ลาอุปสมบท,ลาศึกษา,ลาองค์การระหว่างประเทศ,ลาฟื้นฟูสมรรถภาพ,ลาติดตามคู่สมรส,ลาปฏิบัติงานอื่น,รวมทั้งหมด\n';
+                
+                // Title row
+                const formattedStartDate = new Date(startDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+                const formattedEndDate = new Date(endDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+                csv += `รายงานสรุปการลาบุคลากร\n`;
+                csv += `ช่วงเวลา: ${formattedStartDate} ถึง ${formattedEndDate}\n`;
+                csv += `วันที่ออกรายงาน: ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}\n`;
+                csv += `\n`;
+                
+                // Main header
+                csv += 'ลำดับ,ชื่อ-นามสกุล,ตำแหน่ง,';
+                csv += 'ลาป่วย (ครั้ง),ลาป่วย (วัน),';
+                csv += 'ลาคลอด (ครั้ง),ลาคลอด (วัน),';
+                csv += 'ลาช่วยภริยา (ครั้ง),ลาช่วยภริยา (วัน),';
+                csv += 'ลากิจ (ครั้ง),ลากิจ (วัน),';
+                csv += 'ลาพักผ่อน (ครั้ง),ลาพักผ่อน (วัน),';
+                csv += 'ลาอุปสมบท (ครั้ง),ลาอุปสมบท (วัน),';
+                csv += 'ลาศึกษา (ครั้ง),ลาศึกษา (วัน),';
+                csv += 'ลาองค์การฯ (ครั้ง),ลาองค์การฯ (วัน),';
+                csv += 'ลาฟื้นฟูฯ (ครั้ง),ลาฟื้นฟูฯ (วัน),';
+                csv += 'ลาติดตามฯ (ครั้ง),ลาติดตามฯ (วัน),';
+                csv += 'ลาปฏิบัติงานฯ (ครั้ง),ลาปฏิบัติงานฯ (วัน),';
+                csv += 'รวมทั้งหมด (ครั้ง),รวมทั้งหมด (วัน)\n';
 
-                const sortedUsers = Array.from(userLeaveDetail.values()).sort((a, b) => b.total - a.total);
+                const sortedUsers = Array.from(userLeaveDetail.values())
+                    .filter(user => user.totalCount > 0) // Only show users with leaves
+                    .sort((a, b) => b.totalDays - a.totalDays); // Sort by total days
                 
                 sortedUsers.forEach((user, index) => {
-                    csv += `${index + 1},"${user.name}","${user.position}",${user.sick},${user.maternity},${user.helpWife},${user.personal},${user.vacation},${user.ordination},${user.study},${user.international},${user.rehab},${user.followSpouse},${user.workOther},${user.total}\n`;
+                    csv += `${index + 1},"${user.name}","${user.position}",`;
+                    csv += `${user.sick.count},${user.sick.days},`;
+                    csv += `${user.maternity.count},${user.maternity.days},`;
+                    csv += `${user.helpWife.count},${user.helpWife.days},`;
+                    csv += `${user.personal.count},${user.personal.days},`;
+                    csv += `${user.vacation.count},${user.vacation.days},`;
+                    csv += `${user.ordination.count},${user.ordination.days},`;
+                    csv += `${user.study.count},${user.study.days},`;
+                    csv += `${user.international.count},${user.international.days},`;
+                    csv += `${user.rehab.count},${user.rehab.days},`;
+                    csv += `${user.followSpouse.count},${user.followSpouse.days},`;
+                    csv += `${user.workOther.count},${user.workOther.days},`;
+                    csv += `${user.totalCount},${user.totalDays}\n`;
                 });
+                
+                // Summary row
+                csv += `\n`;
+                csv += `สรุปรวม,,,`;
+                const totals = sortedUsers.reduce((acc, user) => {
+                    acc.sick.count += user.sick.count;
+                    acc.sick.days += user.sick.days;
+                    acc.maternity.count += user.maternity.count;
+                    acc.maternity.days += user.maternity.days;
+                    acc.helpWife.count += user.helpWife.count;
+                    acc.helpWife.days += user.helpWife.days;
+                    acc.personal.count += user.personal.count;
+                    acc.personal.days += user.personal.days;
+                    acc.vacation.count += user.vacation.count;
+                    acc.vacation.days += user.vacation.days;
+                    acc.ordination.count += user.ordination.count;
+                    acc.ordination.days += user.ordination.days;
+                    acc.study.count += user.study.count;
+                    acc.study.days += user.study.days;
+                    acc.international.count += user.international.count;
+                    acc.international.days += user.international.days;
+                    acc.rehab.count += user.rehab.count;
+                    acc.rehab.days += user.rehab.days;
+                    acc.followSpouse.count += user.followSpouse.count;
+                    acc.followSpouse.days += user.followSpouse.days;
+                    acc.workOther.count += user.workOther.count;
+                    acc.workOther.days += user.workOther.days;
+                    acc.totalCount += user.totalCount;
+                    acc.totalDays += user.totalDays;
+                    return acc;
+                }, {
+                    sick: {count:0, days:0}, maternity: {count:0, days:0}, helpWife: {count:0, days:0},
+                    personal: {count:0, days:0}, vacation: {count:0, days:0}, ordination: {count:0, days:0},
+                    study: {count:0, days:0}, international: {count:0, days:0}, rehab: {count:0, days:0},
+                    followSpouse: {count:0, days:0}, workOther: {count:0, days:0}, totalCount: 0, totalDays: 0
+                });
+                
+                csv += `${totals.sick.count},${totals.sick.days},`;
+                csv += `${totals.maternity.count},${totals.maternity.days},`;
+                csv += `${totals.helpWife.count},${totals.helpWife.days},`;
+                csv += `${totals.personal.count},${totals.personal.days},`;
+                csv += `${totals.vacation.count},${totals.vacation.days},`;
+                csv += `${totals.ordination.count},${totals.ordination.days},`;
+                csv += `${totals.study.count},${totals.study.days},`;
+                csv += `${totals.international.count},${totals.international.days},`;
+                csv += `${totals.rehab.count},${totals.rehab.days},`;
+                csv += `${totals.followSpouse.count},${totals.followSpouse.days},`;
+                csv += `${totals.workOther.count},${totals.workOther.days},`;
+                csv += `${totals.totalCount},${totals.totalDays}\n`;
+                
+                csv += `\n`;
+                csv += `หมายเหตุ: แสดงเฉพาะบุคลากรที่มีการลาในช่วงเวลาที่เลือก\n`;
+                csv += `จำนวนบุคลากรที่ลา: ${sortedUsers.length} คน\n`;
 
                 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement('a');
