@@ -518,26 +518,56 @@
             }).join('');
         }
 
-        // Filter functions
-        window.filterApprovals = function(searchText) {
-            const filtered = allLeaves.filter(leave => 
-                leave.userName.toLowerCase().includes(searchText.toLowerCase())
-            );
-            renderApprovalsTable(filtered);
+        // Filter state
+        let currentFilters = {
+            searchText: '',
+            status: 'all',
+            leaveType: 'all'
         };
 
-        window.filterByStatus = function(status) {
-            if (status === 'all') {
-                renderApprovalsTable(allLeaves);
-            } else {
+        // Apply all filters
+        function applyAllFilters() {
+            let filtered = [...allLeaves];
+
+            // Filter by search text
+            if (currentFilters.searchText) {
+                filtered = filtered.filter(leave => 
+                    leave.userName.toLowerCase().includes(currentFilters.searchText.toLowerCase())
+                );
+            }
+
+            // Filter by status
+            if (currentFilters.status !== 'all') {
                 const statusMap = {
                     'pending': 'รออนุมัติ',
                     'approved': 'อนุมัติแล้ว',
                     'rejected': 'ไม่อนุมัติ'
                 };
-                const filtered = allLeaves.filter(leave => leave.status === statusMap[status]);
-                renderApprovalsTable(filtered);
+                filtered = filtered.filter(leave => leave.status === statusMap[currentFilters.status]);
             }
+
+            // Filter by leave type
+            if (currentFilters.leaveType !== 'all') {
+                filtered = filtered.filter(leave => leave.type === currentFilters.leaveType);
+            }
+
+            renderApprovalsTable(filtered);
+        }
+
+        // Filter functions
+        window.filterApprovals = function(searchText) {
+            currentFilters.searchText = searchText;
+            applyAllFilters();
+        };
+
+        window.filterByStatus = function(status) {
+            currentFilters.status = status;
+            applyAllFilters();
+        };
+
+        window.filterByLeaveType = function(leaveType) {
+            currentFilters.leaveType = leaveType;
+            applyAllFilters();
         };
 
         // Load personnel data - UPDATED TO TABLE FORMAT
@@ -631,14 +661,13 @@
                     const positionText = positionCell.textContent;
                     if (position === 'all') {
                         row.style.display = '';
-                    } else if (position === 'ผู้บริหาร') {
-                        row.style.display = positionText.includes('ผู้บริหาร') ? '' : 'none';
                     } else if (position === 'ครู') {
-                        row.style.display = positionText.includes('ครู') ? '' : 'none';
-                    } else if (position === 'เจ้าหน้าที่') {
-                        row.style.display = positionText.includes('เจ้าหน้าที่') ? '' : 'none';
+                        // กรองครูทุกระดับ
+                        row.style.display = positionText.includes('ครู') && 
+                                           !positionText.includes('ครูอัตราจ้าง') ? '' : 'none';
                     } else {
-                        row.style.display = '';
+                        // กรองตามตำแหน่งที่เลือกเป่๊ะๆ
+                        row.style.display = positionText.includes(position) ? '' : 'none';
                     }
                 }
             });
