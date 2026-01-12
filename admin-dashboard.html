@@ -184,11 +184,11 @@
                         <input type="text" placeholder="ค้นหาชื่อบุคลากร..." onkeyup="filterPersonnel(this.value)">
                         <span class="search-icon">🔍</span>
                     </div>
-                    <select style="width: auto; min-width: 180px;">
+                    <select style="width: auto; min-width: 180px;" onchange="filterByPosition(this.value)">
                         <option value="all">ตำแหน่งทั้งหมด</option>
-                        <option value="teacher">ครู</option>
-                        <option value="admin">ผู้บริหาร</option>
-                        <option value="staff">เจ้าหน้าที่</option>
+                        <option value="ผู้บริหาร">ผู้บริหาร</option>
+                        <option value="ครู">ครู</option>
+                        <option value="เจ้าหน้าที่">เจ้าหน้าที่</option>
                     </select>
                 </div>
 
@@ -448,6 +448,7 @@
                     <label>ตำแหน่ง <span style="color: var(--danger);">*</span></label>
                     <select name="position" required>
                         <option value="">เลือกตำแหน่ง</option>
+                        <option value="ผู้บริหาร">ผู้บริหาร</option>
                         <option value="ครูผู้ช่วย">ครูผู้ช่วย</option>
                         <option value="ครู">ครู</option>
                         <option value="ครูชำนาญการ">ครูชำนาญการ</option>
@@ -523,6 +524,7 @@
                         <label>ตำแหน่ง <span style="color: var(--danger);">*</span></label>
                         <select id="editPosition" required>
                             <option value="">เลือกตำแหน่ง</option>
+                            <option value="ผู้บริหาร">ผู้บริหาร</option>
                             <option value="ครูผู้ช่วย">ครูผู้ช่วย</option>
                             <option value="ครู">ครู</option>
                             <option value="ครูชำนาญการ">ครูชำนาญการ</option>
