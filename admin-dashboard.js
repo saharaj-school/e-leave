@@ -609,7 +609,7 @@
             });
         }
 
-        // View personnel detail - UPDATED WITH ALL 11 LEAVE TYPES INCLUDING USED DAYS
+        // View personnel detail - CALCULATE FROM DATABASE
         window.viewPersonnelDetail = async function(userId) {
             try {
                 const userDoc = await getDoc(doc(db, 'users', userId));
@@ -620,20 +620,62 @@
 
                 const user = userDoc.data();
                 
+                // Query all approved leaves for this user
+                const leavesQuery = query(
+                    collection(db, 'leaves'),
+                    where('userId', '==', userId),
+                    where('status', '==', 'อนุมัติแล้ว')
+                );
+                const leavesSnapshot = await getDocs(leavesQuery);
+                
+                // Calculate used days for each type
+                const usedDays = {
+                    sick: 0,
+                    maternity: 0,
+                    helpWife: 0,
+                    personal: 0,
+                    vacation: 0,
+                    ordination: 0,
+                    study: 0,
+                    international: 0,
+                    rehab: 0,
+                    followSpouse: 0,
+                    workOther: 0
+                };
+                
+                leavesSnapshot.forEach(docSnap => {
+                    const leave = docSnap.data();
+                    const days = leave.days || 0;
+                    
+                    switch(leave.type) {
+                        case 'ลาป่วย': usedDays.sick += days; break;
+                        case 'ลาคลอดบุตร': usedDays.maternity += days; break;
+                        case 'ลาช่วยเหลือภริยาคลอดบุตร': usedDays.helpWife += days; break;
+                        case 'ลากิจส่วนตัว': usedDays.personal += days; break;
+                        case 'ลาพักผ่อน': usedDays.vacation += days; break;
+                        case 'ลาอุปสมบท': usedDays.ordination += days; break;
+                        case 'ลาศึกษา': usedDays.study += days; break;
+                        case 'ลาปฏิบัติงานองค์การระหว่างประเทศ': usedDays.international += days; break;
+                        case 'ลาฟื้นฟูสมรรถภาพ': usedDays.rehab += days; break;
+                        case 'ลาติดตามคู่สมรส': usedDays.followSpouse += days; break;
+                        case 'ลาปฏิบัติงานในหน่วยงานอื่น': usedDays.workOther += days; break;
+                    }
+                });
+                
                 let message = `รายละเอียดวันลา: ${user.name}\n`;
                 message += `ตำแหน่ง: ${user.position || 'ไม่ระบุ'}\n\n`;
                 message += `📊 สรุปวันลา (ลาไปแล้ว / คงเหลือ):\n\n`;
-                message += `🏥 ลาป่วย: ${user.sickLeaveUsed || 0} / ${user.sickLeaveRemaining || 30} วัน\n`;
-                message += `👶 ลาคลอดบุตร: ${user.maternityLeaveUsed || 0} / ${user.maternityLeaveRemaining || 90} วัน\n`;
-                message += `🤱 ลาช่วยภริยาคลอดบุตร: ${user.helpWifeLeaveUsed || 0} / ${user.helpWifeLeaveRemaining || 15} วัน\n`;
-                message += `📝 ลากิจส่วนตัว: ${user.personalLeaveUsed || 0} / ${user.personalLeaveRemaining || 45} วัน\n`;
-                message += `🏖️ ลาพักผ่อน: ${user.vacationLeaveUsed || 0} / ${user.vacationLeaveRemaining || 10} วัน\n`;
-                message += `🙏 ลาอุปสมบท: ${user.ordinationLeaveUsed || 0} / ${user.ordinationLeaveRemaining || 120} วัน\n`;
-                message += `📚 ลาศึกษา: ${user.studyLeaveUsed || 0} / ${user.studyLeaveRemaining || 365} วัน\n`;
-                message += `🌏 ลาองค์การระหว่างประเทศ: ${user.internationalLeaveUsed || 0} / ${user.internationalLeaveRemaining || 730} วัน\n`;
-                message += `💪 ลาฟื้นฟูสมรรถภาพ: ${user.rehabLeaveUsed || 0} / ${user.rehabLeaveRemaining || 180} วัน\n`;
-                message += `✈️ ลาติดตามคู่สมรส: ${user.followSpouseLeaveUsed || 0} / ${user.followSpouseLeaveRemaining || 365} วัน\n`;
-                message += `🏛️ ลาปฏิบัติงานในหน่วยงานอื่น: ${user.workOtherLeaveUsed || 0} / ${user.workOtherLeaveRemaining || 365} วัน`;
+                message += `🏥 ลาป่วย: ${usedDays.sick} / ${user.sickLeaveRemaining || 30} วัน\n`;
+                message += `👶 ลาคลอดบุตร: ${usedDays.maternity} / ${user.maternityLeaveRemaining || 90} วัน\n`;
+                message += `🤱 ลาช่วยภริยาคลอดบุตร: ${usedDays.helpWife} / ${user.helpWifeLeaveRemaining || 15} วัน\n`;
+                message += `📝 ลากิจส่วนตัว: ${usedDays.personal} / ${user.personalLeaveRemaining || 45} วัน\n`;
+                message += `🏖️ ลาพักผ่อน: ${usedDays.vacation} / ${user.vacationLeaveRemaining || 10} วัน\n`;
+                message += `🙏 ลาอุปสมบท: ${usedDays.ordination} / ${user.ordinationLeaveRemaining || 120} วัน\n`;
+                message += `📚 ลาศึกษา: ${usedDays.study} / ${user.studyLeaveRemaining || 365} วัน\n`;
+                message += `🌏 ลาองค์การระหว่างประเทศ: ${usedDays.international} / ${user.internationalLeaveRemaining || 730} วัน\n`;
+                message += `💪 ลาฟื้นฟูสมรรถภาพ: ${usedDays.rehab} / ${user.rehabLeaveRemaining || 180} วัน\n`;
+                message += `✈️ ลาติดตามคู่สมรส: ${usedDays.followSpouse} / ${user.followSpouseLeaveRemaining || 365} วัน\n`;
+                message += `🏛️ ลาปฏิบัติงานในหน่วยงานอื่น: ${usedDays.workOther} / ${user.workOtherLeaveRemaining || 365} วัน`;
 
                 alert(message);
             } catch (error) {
@@ -915,7 +957,7 @@
             document.getElementById('editPersonnelModal').classList.remove('active');
         };
 
-        // Edit personnel - UPDATED WITH ALL 11 LEAVE TYPES INCLUDING USED DAYS
+        // Edit personnel - CALCULATE USED DAYS FROM DATABASE
         window.editPersonnel = async function(userId) {
             try {
                 const userDoc = await getDoc(doc(db, 'users', userId));
@@ -926,6 +968,48 @@
 
                 const user = userDoc.data();
                 
+                // Query all approved leaves for this user to calculate actual used days
+                const leavesQuery = query(
+                    collection(db, 'leaves'),
+                    where('userId', '==', userId),
+                    where('status', '==', 'อนุมัติแล้ว')
+                );
+                const leavesSnapshot = await getDocs(leavesQuery);
+                
+                // Calculate used days for each type from actual database records
+                const usedDays = {
+                    sick: 0,
+                    maternity: 0,
+                    helpWife: 0,
+                    personal: 0,
+                    vacation: 0,
+                    ordination: 0,
+                    study: 0,
+                    international: 0,
+                    rehab: 0,
+                    followSpouse: 0,
+                    workOther: 0
+                };
+                
+                leavesSnapshot.forEach(docSnap => {
+                    const leave = docSnap.data();
+                    const days = leave.days || 0;
+                    
+                    switch(leave.type) {
+                        case 'ลาป่วย': usedDays.sick += days; break;
+                        case 'ลาคลอดบุตร': usedDays.maternity += days; break;
+                        case 'ลาช่วยเหลือภริยาคลอดบุตร': usedDays.helpWife += days; break;
+                        case 'ลากิจส่วนตัว': usedDays.personal += days; break;
+                        case 'ลาพักผ่อน': usedDays.vacation += days; break;
+                        case 'ลาอุปสมบท': usedDays.ordination += days; break;
+                        case 'ลาศึกษา': usedDays.study += days; break;
+                        case 'ลาปฏิบัติงานองค์การระหว่างประเทศ': usedDays.international += days; break;
+                        case 'ลาฟื้นฟูสมรรถภาพ': usedDays.rehab += days; break;
+                        case 'ลาติดตามคู่สมรส': usedDays.followSpouse += days; break;
+                        case 'ลาปฏิบัติงานในหน่วยงานอื่น': usedDays.workOther += days; break;
+                    }
+                });
+                
                 document.getElementById('editPersonnelId').value = userId;
                 document.getElementById('editName').value = user.name || '';
                 document.getElementById('editPosition').value = user.position || '';
@@ -933,7 +1017,7 @@
                 document.getElementById('editUsername').value = user.username || '';
                 document.getElementById('editPassword').value = '';
                 
-                // Set remaining leave days
+                // Set remaining leave days (from user profile or defaults)
                 document.getElementById('editSickLeave').value = user.sickLeaveRemaining || 30;
                 document.getElementById('editMaternityLeave').value = user.maternityLeaveRemaining || 90;
                 document.getElementById('editHelpWifeLeave').value = user.helpWifeLeaveRemaining || 15;
@@ -946,18 +1030,18 @@
                 document.getElementById('editFollowSpouseLeave').value = user.followSpouseLeaveRemaining || 365;
                 document.getElementById('editWorkOtherLeave').value = user.workOtherLeaveRemaining || 365;
                 
-                // Set used leave days
-                document.getElementById('editSickLeaveUsed').value = user.sickLeaveUsed || 0;
-                document.getElementById('editMaternityLeaveUsed').value = user.maternityLeaveUsed || 0;
-                document.getElementById('editHelpWifeLeaveUsed').value = user.helpWifeLeaveUsed || 0;
-                document.getElementById('editPersonalLeaveUsed').value = user.personalLeaveUsed || 0;
-                document.getElementById('editVacationLeaveUsed').value = user.vacationLeaveUsed || 0;
-                document.getElementById('editOrdinationLeaveUsed').value = user.ordinationLeaveUsed || 0;
-                document.getElementById('editStudyLeaveUsed').value = user.studyLeaveUsed || 0;
-                document.getElementById('editInternationalLeaveUsed').value = user.internationalLeaveUsed || 0;
-                document.getElementById('editRehabLeaveUsed').value = user.rehabLeaveUsed || 0;
-                document.getElementById('editFollowSpouseLeaveUsed').value = user.followSpouseLeaveUsed || 0;
-                document.getElementById('editWorkOtherLeaveUsed').value = user.workOtherLeaveUsed || 0;
+                // Set used leave days (calculated from actual database records)
+                document.getElementById('editSickLeaveUsed').value = usedDays.sick;
+                document.getElementById('editMaternityLeaveUsed').value = usedDays.maternity;
+                document.getElementById('editHelpWifeLeaveUsed').value = usedDays.helpWife;
+                document.getElementById('editPersonalLeaveUsed').value = usedDays.personal;
+                document.getElementById('editVacationLeaveUsed').value = usedDays.vacation;
+                document.getElementById('editOrdinationLeaveUsed').value = usedDays.ordination;
+                document.getElementById('editStudyLeaveUsed').value = usedDays.study;
+                document.getElementById('editInternationalLeaveUsed').value = usedDays.international;
+                document.getElementById('editRehabLeaveUsed').value = usedDays.rehab;
+                document.getElementById('editFollowSpouseLeaveUsed').value = usedDays.followSpouse;
+                document.getElementById('editWorkOtherLeaveUsed').value = usedDays.workOther;
                 
                 document.getElementById('editEmail').value = user.email || '';
                 document.getElementById('editPhone').value = user.phone || '';
@@ -1090,7 +1174,7 @@
 
         // Initialize event listeners
         function initializeEventListeners() {
-            // Edit personnel form - UPDATED WITH USED DAYS
+            // Edit personnel form - UPDATED (REMOVED USED DAYS SAVING)
             document.getElementById('editPersonnelForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
@@ -1121,7 +1205,7 @@
                         position: document.getElementById('editPosition').value,
                         department: document.getElementById('editDepartment').value,
                         username: newUsername,
-                        // Remaining leave days
+                        // Only save remaining leave days (used days are calculated from database)
                         sickLeaveRemaining: parseInt(document.getElementById('editSickLeave').value) || 30,
                         maternityLeaveRemaining: parseInt(document.getElementById('editMaternityLeave').value) || 90,
                         helpWifeLeaveRemaining: parseInt(document.getElementById('editHelpWifeLeave').value) || 15,
@@ -1133,18 +1217,6 @@
                         rehabLeaveRemaining: parseInt(document.getElementById('editRehabLeave').value) || 180,
                         followSpouseLeaveRemaining: parseInt(document.getElementById('editFollowSpouseLeave').value) || 365,
                         workOtherLeaveRemaining: parseInt(document.getElementById('editWorkOtherLeave').value) || 365,
-                        // Used leave days
-                        sickLeaveUsed: parseInt(document.getElementById('editSickLeaveUsed').value) || 0,
-                        maternityLeaveUsed: parseInt(document.getElementById('editMaternityLeaveUsed').value) || 0,
-                        helpWifeLeaveUsed: parseInt(document.getElementById('editHelpWifeLeaveUsed').value) || 0,
-                        personalLeaveUsed: parseInt(document.getElementById('editPersonalLeaveUsed').value) || 0,
-                        vacationLeaveUsed: parseInt(document.getElementById('editVacationLeaveUsed').value) || 0,
-                        ordinationLeaveUsed: parseInt(document.getElementById('editOrdinationLeaveUsed').value) || 0,
-                        studyLeaveUsed: parseInt(document.getElementById('editStudyLeaveUsed').value) || 0,
-                        internationalLeaveUsed: parseInt(document.getElementById('editInternationalLeaveUsed').value) || 0,
-                        rehabLeaveUsed: parseInt(document.getElementById('editRehabLeaveUsed').value) || 0,
-                        followSpouseLeaveUsed: parseInt(document.getElementById('editFollowSpouseLeaveUsed').value) || 0,
-                        workOtherLeaveUsed: parseInt(document.getElementById('editWorkOtherLeaveUsed').value) || 0,
                         email: document.getElementById('editEmail').value,
                         phone: document.getElementById('editPhone').value,
                         updatedAt: new Date().toISOString(),
@@ -1213,18 +1285,7 @@
                         rehabLeaveRemaining: 180,
                         followSpouseLeaveRemaining: 365,
                         workOtherLeaveRemaining: 365,
-                        // Used leave days (initially zero)
-                        sickLeaveUsed: 0,
-                        maternityLeaveUsed: 0,
-                        helpWifeLeaveUsed: 0,
-                        personalLeaveUsed: 0,
-                        vacationLeaveUsed: 0,
-                        ordinationLeaveUsed: 0,
-                        studyLeaveUsed: 0,
-                        internationalLeaveUsed: 0,
-                        rehabLeaveUsed: 0,
-                        followSpouseLeaveUsed: 0,
-                        workOtherLeaveUsed: 0,
+                        // Note: Used leave days are calculated from database, not stored in user profile
                         createdAt: new Date().toISOString(),
                         createdBy: currentAdminName
                     };
