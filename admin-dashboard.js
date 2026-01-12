@@ -1400,6 +1400,246 @@
             alert('💾 บันทึกการตั้งค่าเรียบร้อยแล้ว');
         };
 
+        // Load Report Summary - Show only used leave types
+        window.loadReportSummary = async function() {
+            try {
+                const startDate = document.getElementById('reportStartDate').value;
+                const endDate = document.getElementById('reportEndDate').value;
+
+                if (!startDate || !endDate) {
+                    alert('⚠️ กรุณาเลือกช่วงเวลาก่อน');
+                    return;
+                }
+
+                const container = document.getElementById('reportSummaryContainer');
+                container.innerHTML = '<div style="text-align: center; padding: 40px;"><div style="border: 2px solid var(--border); border-top: 2px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 15px;"></div>กำลังโหลดรายงาน...</div>';
+
+                const leavesSnapshot = await getDocs(collection(db, 'leaves'));
+                const usersSnapshot = await getDocs(collection(db, 'users'));
+
+                const leaveTypeIcons = {
+                    'ลาป่วย': '🏥',
+                    'ลาคลอดบุตร': '👶',
+                    'ลาช่วยเหลือภริยาคลอดบุตร': '🤱',
+                    'ลากิจส่วนตัว': '📝',
+                    'ลาพักผ่อน': '🏖️',
+                    'ลาอุปสมบท': '🙏',
+                    'ลาศึกษา': '📚',
+                    'ลาปฏิบัติงานองค์การระหว่างประเทศ': '🌏',
+                    'ลาฟื้นฟูสมรรถภาพ': '💪',
+                    'ลาติดตามคู่สมรส': '✈️',
+                    'ลาปฏิบัติงานในหน่วยงานอื่น': '🏛️'
+                };
+
+                const userLeaveDetail = new Map();
+                const usedLeaveTypes = new Set();
+
+                // Initialize user data
+                usersSnapshot.forEach(docSnap => {
+                    const user = docSnap.data();
+                    if (user.role === 'teacher') {
+                        userLeaveDetail.set(docSnap.id, {
+                            name: user.name,
+                            position: user.position || '',
+                            leaves: {}
+                        });
+                    }
+                });
+
+                // Process leaves
+                leavesSnapshot.forEach(docSnap => {
+                    const leave = docSnap.data();
+                    if (leave.status === 'อนุมัติแล้ว' && userLeaveDetail.has(leave.userId)) {
+                        const leaveStart = new Date(leave.startDate);
+                        const leaveEnd = new Date(leave.endDate);
+                        const rangeStart = new Date(startDate);
+                        const rangeEnd = new Date(endDate);
+
+                        if (leaveStart <= rangeEnd && leaveEnd >= rangeStart) {
+                            const userLeave = userLeaveDetail.get(leave.userId);
+                            const days = leave.days || 0;
+                            const type = leave.type;
+                            
+                            usedLeaveTypes.add(type);
+                            
+                            if (!userLeave.leaves[type]) {
+                                userLeave.leaves[type] = { count: 0, days: 0 };
+                            }
+                            
+                            userLeave.leaves[type].count++;
+                            userLeave.leaves[type].days += days;
+                        }
+                    }
+                });
+
+                // Filter users who have leaves
+                const usersWithLeaves = Array.from(userLeaveDetail.values())
+                    .filter(user => Object.keys(user.leaves).length > 0)
+                    .sort((a, b) => {
+                        const aTotalDays = Object.values(a.leaves).reduce((sum, l) => sum + l.days, 0);
+                        const bTotalDays = Object.values(b.leaves).reduce((sum, l) => sum + l.days, 0);
+                        return bTotalDays - aTotalDays;
+                    });
+
+                if (usersWithLeaves.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px;">
+                            <div style="font-size: 3rem; margin-bottom: 15px;">📭</div>
+                            <div style="font-size: 1.1rem; color: var(--text);">ไม่มีข้อมูลการลาในช่วงเวลาที่เลือก</div>
+                            <div style="font-size: 0.9rem; color: var(--text-light); margin-top: 8px;">
+                                ${new Date(startDate).toLocaleDateString('th-TH')} - ${new Date(endDate).toLocaleDateString('th-TH')}
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const sortedLeaveTypes = Array.from(usedLeaveTypes).sort();
+
+                // Calculate totals
+                const typeTotals = {};
+                sortedLeaveTypes.forEach(type => {
+                    typeTotals[type] = { count: 0, days: 0 };
+                });
+
+                usersWithLeaves.forEach(user => {
+                    sortedLeaveTypes.forEach(type => {
+                        if (user.leaves[type]) {
+                            typeTotals[type].count += user.leaves[type].count;
+                            typeTotals[type].days += user.leaves[type].days;
+                        }
+                    });
+                });
+
+                const grandTotalCount = Object.values(typeTotals).reduce((sum, t) => sum + t.count, 0);
+                const grandTotalDays = Object.values(typeTotals).reduce((sum, t) => sum + t.days, 0);
+
+                // Build HTML
+                let html = `
+                    <div style="background: var(--bg); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="font-size: 1.2rem; color: var(--text); margin: 0;">📊 รายงานสรุปการลา</h3>
+                            <div style="font-size: 0.9rem; color: var(--text-light);">
+                                ${new Date(startDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })} 
+                                - 
+                                ${new Date(endDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                            <div style="background: white; padding: 16px; border-radius: 8px; text-align: center; border: 1px solid var(--border);">
+                                <div style="font-size: 1.75rem; font-weight: 700; color: var(--primary);">${usersWithLeaves.length}</div>
+                                <div style="font-size: 0.85rem; color: var(--text-light);">บุคลากรที่ลา</div>
+                            </div>
+                            <div style="background: white; padding: 16px; border-radius: 8px; text-align: center; border: 1px solid var(--border);">
+                                <div style="font-size: 1.75rem; font-weight: 700; color: var(--primary);">${grandTotalCount}</div>
+                                <div style="font-size: 0.85rem; color: var(--text-light);">จำนวนครั้งทั้งหมด</div>
+                            </div>
+                            <div style="background: white; padding: 16px; border-radius: 8px; text-align: center; border: 1px solid var(--border);">
+                                <div style="font-size: 1.75rem; font-weight: 700; color: var(--primary);">${grandTotalDays}</div>
+                                <div style="font-size: 0.85rem; color: var(--text-light);">จำนวนวันทั้งหมด</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table style="font-size: 0.9rem;">
+                            <thead>
+                                <tr>
+                                    <th style="position: sticky; left: 0; background: white; z-index: 2;">ลำดับ</th>
+                                    <th style="position: sticky; left: 50px; background: white; z-index: 2; min-width: 180px;">ชื่อ-นามสกุล</th>
+                                    <th style="position: sticky; left: 230px; background: white; z-index: 2; min-width: 150px;">ตำแหน่ง</th>
+                `;
+
+                sortedLeaveTypes.forEach(type => {
+                    html += `<th colspan="2" style="background: var(--bg); text-align: center; min-width: 120px;">${leaveTypeIcons[type] || '📋'} ${type}</th>`;
+                });
+
+                html += `
+                                    <th colspan="2" style="background: #dbeafe; text-align: center; font-weight: 700;">รวมทั้งหมด</th>
+                                </tr>
+                                <tr style="background: var(--bg);">
+                                    <th colspan="3"></th>
+                `;
+
+                sortedLeaveTypes.forEach(() => {
+                    html += `<th style="font-size: 0.8rem; font-weight: 500;">ครั้ง</th><th style="font-size: 0.8rem; font-weight: 500;">วัน</th>`;
+                });
+
+                html += `
+                                    <th style="font-size: 0.8rem; font-weight: 700;">ครั้ง</th>
+                                    <th style="font-size: 0.8rem; font-weight: 700;">วัน</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                usersWithLeaves.forEach((user, index) => {
+                    const userTotalCount = Object.values(user.leaves).reduce((sum, l) => sum + l.count, 0);
+                    const userTotalDays = Object.values(user.leaves).reduce((sum, l) => sum + l.days, 0);
+
+                    html += `
+                        <tr>
+                            <td style="position: sticky; left: 0; background: white;">${index + 1}</td>
+                            <td style="position: sticky; left: 50px; background: white;"><strong>${user.name}</strong></td>
+                            <td style="position: sticky; left: 230px; background: white;">${user.position}</td>
+                    `;
+
+                    sortedLeaveTypes.forEach(type => {
+                        const leave = user.leaves[type];
+                        if (leave) {
+                            html += `
+                                <td style="text-align: center;">${leave.count}</td>
+                                <td style="text-align: center;"><strong>${leave.days}</strong></td>
+                            `;
+                        } else {
+                            html += `<td style="text-align: center; color: var(--text-light);">-</td><td style="text-align: center; color: var(--text-light);">-</td>`;
+                        }
+                    });
+
+                    html += `
+                            <td style="text-align: center; background: #dbeafe; font-weight: 700;">${userTotalCount}</td>
+                            <td style="text-align: center; background: #dbeafe; font-weight: 700;">${userTotalDays}</td>
+                        </tr>
+                    `;
+                });
+
+                // Summary row
+                html += `
+                    <tr style="background: #f1f5f9; font-weight: 700;">
+                        <td colspan="3" style="position: sticky; left: 0; background: #f1f5f9;">สรุปรวม</td>
+                `;
+
+                sortedLeaveTypes.forEach(type => {
+                    html += `
+                        <td style="text-align: center;">${typeTotals[type].count}</td>
+                        <td style="text-align: center;">${typeTotals[type].days}</td>
+                    `;
+                });
+
+                html += `
+                        <td style="text-align: center; background: #bfdbfe; font-weight: 700;">${grandTotalCount}</td>
+                        <td style="text-align: center; background: #bfdbfe; font-weight: 700;">${grandTotalDays}</td>
+                    </tr>
+                `;
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading report:', error);
+                document.getElementById('reportSummaryContainer').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--danger);">
+                        ❌ เกิดข้อผิดพลาด: ${error.message}
+                    </div>
+                `;
+            }
+        };
+
         // Initialize event listeners
         function initializeEventListeners() {
             // Edit personnel form - SAVE BOTH USED AND REMAINING DAYS
