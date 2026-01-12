@@ -339,37 +339,20 @@
                         <input type="date" id="reportStartDate" style="width: auto;">
                         <span style="display: flex; align-items: center;">ถึง</span>
                         <input type="date" id="reportEndDate" style="width: auto;">
+                        <button class="btn btn-primary" onclick="loadReportSummary()" style="background: #2563eb;">
+                            🔍 แสดงรายงาน
+                        </button>
                         <button class="btn btn-success" onclick="exportToExcel()" style="background: #10b981;">
                             📊 ส่งออก Excel
                         </button>
                     </div>
                 </div>
 
-                <div class="stats-overview">
-                    <div class="stat-box">
-                        <div class="stat-icon">📋</div>
-                        <div class="stat-number">0</div>
-                        <div class="stat-label">ใบลาทั้งหมด</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-icon">🏥</div>
-                        <div class="stat-number">0</div>
-                        <div class="stat-label">ลาป่วย</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-icon">📝</div>
-                        <div class="stat-number">0</div>
-                        <div class="stat-label">ลากิจส่วนตัว</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-icon">👶</div>
-                        <div class="stat-number">0</div>
-                        <div class="stat-label">ลาคลอดบุตร</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-icon">📂</div>
-                        <div class="stat-number">0</div>
-                        <div class="stat-label">ลาประเภทอื่นๆ</div>
+                <!-- Report Summary Container -->
+                <div id="reportSummaryContainer">
+                    <div style="text-align: center; padding: 60px 20px; color: var(--text-light);">
+                        <div style="font-size: 3rem; margin-bottom: 15px;">📊</div>
+                        <div style="font-size: 1.1rem;">เลือกช่วงเวลาและกดปุ่ม "แสดงรายงาน"</div>
                     </div>
                 </div>
 
