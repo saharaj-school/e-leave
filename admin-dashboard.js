@@ -1433,6 +1433,13 @@
 
                 const userLeaveDetail = new Map();
                 const usedLeaveTypes = new Set();
+                
+                // Stats for cards
+                let totalLeaves = 0;
+                let sickCount = 0;
+                let personalCount = 0;
+                let maternityCount = 0;
+                let otherCount = 0;
 
                 // Initialize user data
                 usersSnapshot.forEach(docSnap => {
@@ -1461,6 +1468,13 @@
                             const type = leave.type;
                             
                             usedLeaveTypes.add(type);
+                            totalLeaves++;
+                            
+                            // Count by type for cards
+                            if (type === 'ลาป่วย') sickCount++;
+                            else if (type === 'ลากิจส่วนตัว') personalCount++;
+                            else if (type === 'ลาคลอดบุตร') maternityCount++;
+                            else otherCount++;
                             
                             if (!userLeave.leaves[type]) {
                                 userLeave.leaves[type] = { count: 0, days: 0 };
@@ -1471,6 +1485,13 @@
                         }
                     }
                 });
+                
+                // Update stat cards
+                document.getElementById('reportTotalLeaves').textContent = totalLeaves;
+                document.getElementById('reportSickLeaves').textContent = sickCount;
+                document.getElementById('reportPersonalLeaves').textContent = personalCount;
+                document.getElementById('reportMaternityLeaves').textContent = maternityCount;
+                document.getElementById('reportOtherLeaves').textContent = otherCount;
 
                 // Filter users who have leaves
                 const usersWithLeaves = Array.from(userLeaveDetail.values())
