@@ -199,6 +199,13 @@
             color: var(--primary);
         }
 
+        .stat-subvalue {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
         .stat-suffix {
             font-size: 1rem;
             color: var(--text-light);
@@ -1125,6 +1132,7 @@
                 const leavesSnapshot = await getDocs(leavesQuery);
                 
                 const leaveCounts = {};
+                const leaveDays = {};
                 const leaveIcons = {
                     'ลาป่วย': '🏥',
                     'ลาคลอดบุตร': '👶',
@@ -1143,8 +1151,10 @@
                     const leave = doc.data();
                     if (!leaveCounts[leave.type]) {
                         leaveCounts[leave.type] = 0;
+                        leaveDays[leave.type] = 0;
                     }
-                    leaveCounts[leave.type] += leave.days || 0;
+                    leaveCounts[leave.type]++;
+                    leaveDays[leave.type] += leave.days || 0;
                 });
                 
                 const usedLeaveTypes = Object.entries(leaveCounts);
@@ -1157,16 +1167,17 @@
                         </div>
                     `;
                 } else {
-                    statsGrid.innerHTML = usedLeaveTypes.map(([type, days]) => `
+                    statsGrid.innerHTML = usedLeaveTypes.map(([type, count]) => `
                         <div class="stat-card">
                             <div class="stat-label">
                                 <span style="font-size: 1.5rem;">${leaveIcons[type] || '📋'}</span>
                                 <span>${type}</span>
                             </div>
                             <div class="stat-value">
-                                ${days}
-                                <span class="stat-suffix">วัน</span>
+                                ${count}
+                                <span class="stat-suffix">ครั้ง</span>
                             </div>
+                            <div class="stat-subvalue">${leaveDays[type]} วัน</div>
                         </div>
                     `).join('');
                 }
