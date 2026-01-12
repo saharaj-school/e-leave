@@ -91,7 +91,7 @@
         .leave-summary {
             background: white;
             border-radius: 12px;
-            padding: 30px;
+            padding: 25px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
@@ -99,17 +99,17 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
             border-bottom: 2px solid var(--border);
         }
 
         .summary-icon {
-            font-size: 2rem;
+            font-size: 1.8rem;
         }
 
         .summary-title {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             font-weight: 600;
             color: var(--text);
         }
@@ -117,14 +117,14 @@
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 30px;
+            gap: 12px;
+            margin-bottom: 25px;
         }
 
         .stat-card {
             background: var(--bg);
-            padding: 20px;
-            border-radius: 12px;
+            padding: 16px;
+            border-radius: 10px;
             text-align: center;
             border: 1px solid var(--border);
             transition: all 0.2s ease;
@@ -135,28 +135,34 @@
         }
 
         .stat-number {
-            font-size: 2rem;
+            font-size: 1.75rem;
             font-weight: 700;
             color: var(--primary);
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
         .stat-label {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--text-light);
         }
 
-        .today-leaves {
-            margin-top: 25px;
-            padding-top: 25px;
+        .today-section {
+            margin-top: 20px;
+            padding-top: 20px;
             border-top: 2px solid var(--border);
         }
 
+        .today-section:first-of-type {
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
+        }
+
         .today-header {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 600;
             color: var(--text);
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -164,35 +170,48 @@
 
         .leave-item {
             background: var(--bg);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 10px;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
             border-left: 3px solid var(--primary);
         }
 
-        .leave-name {
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 5px;
+        .trip-item {
+            background: var(--bg);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid #3b82f6;
         }
 
-        .leave-type {
-            font-size: 0.85rem;
+        .item-name {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+
+        .item-detail {
+            font-size: 0.8rem;
             color: var(--text-light);
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
-        .no-leaves {
+        .no-items {
             text-align: center;
-            padding: 40px 20px;
+            padding: 30px 20px;
             color: var(--text-light);
         }
 
-        .no-leaves-icon {
-            font-size: 3rem;
-            margin-bottom: 10px;
+        .no-items-icon {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+
+        .no-items-text {
+            font-size: 0.85rem;
         }
 
         /* Right Side - Login Form */
@@ -462,15 +481,28 @@
                 </div>
             </div>
 
-            <div class="today-leaves">
+            <div class="today-section">
                 <div class="today-header">
                     <span>📅</span>
                     <span>บุคลากรที่ลาวันนี้</span>
                 </div>
                 <div id="todayLeavesList">
-                    <div class="no-leaves">
-                        <div class="no-leaves-icon">✅</div>
-                        <div>กำลังโหลดข้อมูล...</div>
+                    <div class="no-items">
+                        <div class="no-items-icon">⏳</div>
+                        <div class="no-items-text">กำลังโหลดข้อมูล...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="today-section">
+                <div class="today-header">
+                    <span>🚗</span>
+                    <span>บุคลากรที่ไปราชการวันนี้</span>
+                </div>
+                <div id="todayTripsList">
+                    <div class="no-items">
+                        <div class="no-items-icon">⏳</div>
+                        <div class="no-items-text">กำลังโหลดข้อมูล...</div>
                     </div>
                 </div>
             </div>
@@ -532,7 +564,7 @@
         const db = getFirestore(app);
         const analytics = getAnalytics(app);
 
-        // Get leave type style
+        // Get leave type icon
         function getLeaveTypeIcon(type) {
             const icons = {
                 'ลาป่วย': '🏥',
@@ -610,6 +642,43 @@
                     }
                 });
 
+                // Count today's official trips
+                const todayTrips = [];
+                const tripsSnapshot = await getDocs(collection(db, 'official_trips'));
+                
+                tripsSnapshot.forEach(docSnap => {
+                    const trip = docSnap.data();
+                    
+                    // Check both old format (date) and new format (startDate/endDate)
+                    let isToday = false;
+                    
+                    if (trip.startDate && trip.endDate) {
+                        const start = new Date(trip.startDate);
+                        const end = new Date(trip.endDate);
+                        start.setHours(0, 0, 0, 0);
+                        end.setHours(23, 59, 59, 999);
+                        
+                        if (todayStart <= end && todayEnd >= start) {
+                            isToday = true;
+                        }
+                    } else if (trip.date) {
+                        const tripDate = new Date(trip.date);
+                        tripDate.setHours(0, 0, 0, 0);
+                        
+                        if (tripDate.getTime() === todayStart.getTime()) {
+                            isToday = true;
+                        }
+                    }
+                    
+                    if (isToday) {
+                        todayTrips.push({
+                            name: trip.userName,
+                            subject: trip.subject || 'ไปราชการ',
+                            location: trip.location
+                        });
+                    }
+                });
+
                 // Update stats
                 document.getElementById('totalPersonnel').textContent = totalPersonnel;
                 document.getElementById('pendingLeaves').textContent = pendingCount;
@@ -620,18 +689,39 @@
                 const todayLeavesList = document.getElementById('todayLeavesList');
                 if (todayLeaves.length === 0) {
                     todayLeavesList.innerHTML = `
-                        <div class="no-leaves">
-                            <div class="no-leaves-icon">✅</div>
-                            <div>ไม่มีบุคลากรลาในวันนี้</div>
+                        <div class="no-items">
+                            <div class="no-items-icon">✅</div>
+                            <div class="no-items-text">ไม่มีบุคลากรลาในวันนี้</div>
                         </div>
                     `;
                 } else {
                     todayLeavesList.innerHTML = todayLeaves.map(leave => `
                         <div class="leave-item">
-                            <div class="leave-name">${leave.name}</div>
-                            <div class="leave-type">
+                            <div class="item-name">${leave.name}</div>
+                            <div class="item-detail">
                                 <span>${getLeaveTypeIcon(leave.type)}</span>
                                 <span>${leave.type} (${leave.days} วัน)</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                // Update today's trips list
+                const todayTripsList = document.getElementById('todayTripsList');
+                if (todayTrips.length === 0) {
+                    todayTripsList.innerHTML = `
+                        <div class="no-items">
+                            <div class="no-items-icon">✅</div>
+                            <div class="no-items-text">ไม่มีบุคลากรไปราชการในวันนี้</div>
+                        </div>
+                    `;
+                } else {
+                    todayTripsList.innerHTML = todayTrips.map(trip => `
+                        <div class="trip-item">
+                            <div class="item-name">${trip.name}</div>
+                            <div class="item-detail">
+                                <span>📍</span>
+                                <span>${trip.subject} - ${trip.location}</span>
                             </div>
                         </div>
                     `).join('');
