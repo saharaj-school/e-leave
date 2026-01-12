@@ -21,6 +21,14 @@
                 <span class="nav-icon">✅</span>
                 <span>อนุมัติการลา</span>
             </div>
+            <div class="nav-item" onclick="switchTab('official-trips', this)">
+                <span class="nav-icon">🚗</span>
+                <span>การแจ้งไปราชการ</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('late-arrivals', this)">
+                <span class="nav-icon">⏰</span>
+                <span>การแจ้งเข้าสาย</span>
+            </div>
             <div class="nav-item" onclick="switchTab('personnel', this)">
                 <span class="nav-icon">👥</span>
                 <span>จัดการบุคลากร</span>
@@ -120,6 +128,23 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Daily Official Trip Report -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-header">
+                    <h2 class="card-title">🚗 รายงานคนไปราชการวันนี้</h2>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="date" id="dailyTripDate" style="width: auto; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.875rem;">
+                        <button class="btn btn-primary" onclick="loadDailyTrip()" style="width: auto; padding: 8px 16px;">ดูข้อมูล</button>
+                    </div>
+                </div>
+                <div id="dailyTripContent">
+                    <div style="text-align: center; padding: 40px; color: var(--text-light);">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">🚗</div>
+                        <div>เลือกวันที่เพื่อดูรายงานคนไปราชการ</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Approvals Tab -->
@@ -170,6 +195,75 @@
                             </tr>
                         </thead>
                         <tbody id="approvalsTableBody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Official Trips Tab -->
+        <div id="official-trips" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">🚗 การแจ้งไปราชการ</h2>
+                </div>
+
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <input type="text" placeholder="ค้นหาชื่อบุคลากร..." onkeyup="filterOfficialTrips(this.value)">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="officialTripsTable">
+                        <thead>
+                            <tr>
+                                <th>วันที่แจ้ง</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>เรื่อง</th>
+                                <th>วันที่ไปราชการ</th>
+                                <th>สถานที่</th>
+                                <th>วัตถุประสงค์</th>
+                                <th>สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="officialTripsTableBody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Late Arrivals Tab -->
+        <div id="late-arrivals" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">⏰ การแจ้งเข้าสาย</h2>
+                </div>
+
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <input type="text" placeholder="ค้นหาชื่อบุคลากร..." onkeyup="filterLateArrivals(this.value)">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="lateArrivalsTable">
+                        <thead>
+                            <tr>
+                                <th>วันที่แจ้ง</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>วันที่</th>
+                                <th>เวลาเข้างาน</th>
+                                <th>เหตุผล</th>
+                                <th>สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lateArrivalsTableBody">
                             <!-- Data will be populated by JavaScript -->
                         </tbody>
                     </table>
@@ -586,14 +680,14 @@
                 </div>
 
                 <div style="background: var(--bg); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                    <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: var(--text);">📊 จำนวนวันลา (ลาไปแล้วคำนวณจาก DB / แก้ไขคงเหลือได้)</h3>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: var(--text);">📊 จำนวนวันลา (แก้ไขได้ทั้งสองค่า)</h3>
+                    <p style="color: var(--text-light); font-size: 0.9rem; margin-bottom: 15px;">💡 <strong>หมายเหตุ:</strong> ค่า "ลาไปแล้ว" จะถูกคำนวณจากฐานข้อมูลอัตโนมัติเมื่อเปิดฟอร์ม แต่สามารถแก้ไขเพิ่มเติมได้ (เช่น เพิ่มข้อมูลก่อนใช้ระบบ)</p>
                     
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
                         <!-- ลาป่วย -->
                         <div class="form-group">
                             <label>🏥 ลาป่วย - ลาไปแล้ว (วัน)</label>
-                            <input type="number" id="editSickLeaveUsed" min="0" max="365" value="0" readonly style="background: #f1f5f9; cursor: not-allowed;">
-                            <small style="color: var(--text-light); font-size: 0.8rem;">คำนวณอัตโนมัติจากฐานข้อมูล</small>
+                            <input type="number" id="editSickLeaveUsed" min="0" max="365" value="0">
                         </div>
                         <div class="form-group">
                             <label>🏥 ลาป่วย - คงเหลือ (วัน)</label>
@@ -603,8 +697,7 @@
                         <!-- ลาคลอดบุตร -->
                         <div class="form-group">
                             <label>👶 ลาคลอดบุตร - ลาไปแล้ว (วัน)</label>
-                            <input type="number" id="editMaternityLeaveUsed" min="0" max="365" value="0" readonly style="background: #f1f5f9; cursor: not-allowed;">
-                            <small style="color: var(--text-light); font-size: 0.8rem;">คำนวณอัตโนมัติจากฐานข้อมูล</small>
+                            <input type="number" id="editMaternityLeaveUsed" min="0" max="365" value="0">
                         </div>
                         <div class="form-group">
                             <label>👶 ลาคลอดบุตร - คงเหลือ (วัน)</label>
@@ -614,8 +707,7 @@
                         <!-- ลาช่วยภริยา -->
                         <div class="form-group">
                             <label>🤱 ลาช่วยภริยา - ลาไปแล้ว (วัน)</label>
-                            <input type="number" id="editHelpWifeLeaveUsed" min="0" max="365" value="0" readonly style="background: #f1f5f9; cursor: not-allowed;">
-                            <small style="color: var(--text-light); font-size: 0.8rem;">คำนวณอัตโนมัติจากฐานข้อมูล</small>
+                            <input type="number" id="editHelpWifeLeaveUsed" min="0" max="365" value="0">
                         </div>
                         <div class="form-group">
                             <label>🤱 ลาช่วยภริยา - คงเหลือ (วัน)</label>
@@ -625,8 +717,7 @@
                         <!-- ลากิจส่วนตัว -->
                         <div class="form-group">
                             <label>📝 ลากิจส่วนตัว - ลาไปแล้ว (วัน)</label>
-                            <input type="number" id="editPersonalLeaveUsed" min="0" max="365" value="0" readonly style="background: #f1f5f9; cursor: not-allowed;">
-                            <small style="color: var(--text-light); font-size: 0.8rem;">คำนวณอัตโนมัติจากฐานข้อมูล</small>
+                            <input type="number" id="editPersonalLeaveUsed" min="0" max="365" value="0">
                         </div>
                         <div class="form-group">
                             <label>📝 ลากิจส่วนตัว - คงเหลือ (วัน)</label>
@@ -636,8 +727,7 @@
                         <!-- ลาพักผ่อน -->
                         <div class="form-group">
                             <label>🏖️ ลาพักผ่อน - ลาไปแล้ว (วัน)</label>
-                            <input type="number" id="editVacationLeaveUsed" min="0" max="365" value="0" readonly style="background: #f1f5f9; cursor: not-allowed;">
-                            <small style="color: var(--text-light); font-size: 0.8rem;">คำนวณอัตโนมัติจากฐานข้อมูล</small>
+                            <input type="number" id="editVacationLeaveUsed" min="0" max="365" value="0">
                         </div>
                         <div class="form-group">
                             <label>🏖️ ลาพักผ่อน - คงเหลือ (วัน)</label>
@@ -647,8 +737,7 @@
                         <!-- ลาอุปสมบท -->
                         <div class="form-group">
                             <label>🙏 ลาอุปสมบท - ลาไปแล้ว (วัน)</label>
-                            <input type="number" id="editOrdinationLeaveUsed" min="0" max="365" value="0" readonly style="background: #f1f5f9; cursor: not-allowed;">
-                            <small style="color: var(--text-light); font-size: 0.8rem;">คำนวณอัตโนมัติจากฐานข้อมูล</small>
+                            <input type="number" id="editOrdinationLeaveUsed" min="0" max="365" value="0">
                         </div>
                         <div class="form-group">
                             <label>🙏 ลาอุปสมบท - คงเหลือ (วัน)</label>
@@ -658,8 +747,7 @@
                         <!-- ลาศึกษา -->
                         <div class="form-group">
                             <label>📚 ลาศึกษา - ลาไปแล้ว (วัน)</label>
-                            <input type="number" id="editStudyLeaveUsed" min="0" max="730" value="0" readonly style="background: #f1f5f9; cursor: not-allowed;">
-                            <small style="color: var(--text-light); font-size: 0.8rem;">คำนวณอัตโนมัติจากฐานข้อมูล</small>
+                            <input type="number" id="editStudyLeaveUsed" min="0" max="730" value="0">
                         </div>
                         <div class="form-group">
                             <label>📚 ลาศึกษา - คงเหลือ (วัน)</label>
@@ -669,8 +757,7 @@
                         <!-- ลาองค์การระหว่างประเทศ -->
                         <div class="form-group">
                             <label>🌏 ลาองค์การฯ - ลาไปแล้ว (วัน)</label>
-                            <input type="number" id="editInternationalLeaveUsed" min="0" max="730" value="0" readonly style="background: #f1f5f9; cursor: not-allowed;">
-                            <small style="color: var(--text-light); font-size: 0.8rem;">คำนวณอัตโนมัติจากฐานข้อมูล</small>
+                            <input type="number" id="editInternationalLeaveUsed" min="0" max="730" value="0">
                         </div>
                         <div class="form-group">
                             <label>🌏 ลาองค์การฯ - คงเหลือ (วัน)</label>
@@ -680,8 +767,7 @@
                         <!-- ลาฟื้นฟูสมรรถภาพ -->
                         <div class="form-group">
                             <label>💪 ลาฟื้นฟูฯ - ลาไปแล้ว (วัน)</label>
-                            <input type="number" id="editRehabLeaveUsed" min="0" max="365" value="0" readonly style="background: #f1f5f9; cursor: not-allowed;">
-                            <small style="color: var(--text-light); font-size: 0.8rem;">คำนวณอัตโนมัติจากฐานข้อมูล</small>
+                            <input type="number" id="editRehabLeaveUsed" min="0" max="365" value="0">
                         </div>
                         <div class="form-group">
                             <label>💪 ลาฟื้นฟูฯ - คงเหลือ (วัน)</label>
@@ -691,8 +777,7 @@
                         <!-- ลาติดตามคู่สมรส -->
                         <div class="form-group">
                             <label>✈️ ลาติดตามคู่สมรส - ลาไปแล้ว (วัน)</label>
-                            <input type="number" id="editFollowSpouseLeaveUsed" min="0" max="730" value="0" readonly style="background: #f1f5f9; cursor: not-allowed;">
-                            <small style="color: var(--text-light); font-size: 0.8rem;">คำนวณอัตโนมัติจากฐานข้อมูล</small>
+                            <input type="number" id="editFollowSpouseLeaveUsed" min="0" max="730" value="0">
                         </div>
                         <div class="form-group">
                             <label>✈️ ลาติดตามคู่สมรส - คงเหลือ (วัน)</label>
@@ -702,8 +787,7 @@
                         <!-- ลาปฏิบัติงานในหน่วยงานอื่น -->
                         <div class="form-group">
                             <label>🏛️ ลาปฏิบัติงานฯ - ลาไปแล้ว (วัน)</label>
-                            <input type="number" id="editWorkOtherLeaveUsed" min="0" max="730" value="0" readonly style="background: #f1f5f9; cursor: not-allowed;">
-                            <small style="color: var(--text-light); font-size: 0.8rem;">คำนวณอัตโนมัติจากฐานข้อมูล</small>
+                            <input type="number" id="editWorkOtherLeaveUsed" min="0" max="730" value="0">
                         </div>
                         <div class="form-group">
                             <label>🏛️ ลาปฏิบัติงานฯ - คงเหลือ (วัน)</label>
