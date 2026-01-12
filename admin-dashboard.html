@@ -328,9 +328,35 @@
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">📈 รายงานสรุป</h2>
-                    <button class="btn btn-primary" onclick="exportReport()">
-                        <span>📥</span> ส่งออกรายงาน
-                    </button>
+                </div>
+
+                <!-- Stats Overview Cards -->
+                <div class="stats-overview" id="reportStats" style="margin-bottom: 25px;">
+                    <div class="stat-box">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-number" id="reportTotalLeaves">0</div>
+                        <div class="stat-label">ใบลาทั้งหมด</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">🏥</div>
+                        <div class="stat-number" id="reportSickLeaves">0</div>
+                        <div class="stat-label">ลาป่วย</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">📝</div>
+                        <div class="stat-number" id="reportPersonalLeaves">0</div>
+                        <div class="stat-label">ลากิจส่วนตัว</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">👶</div>
+                        <div class="stat-number" id="reportMaternityLeaves">0</div>
+                        <div class="stat-label">ลาคลอดบุตร</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">📂</div>
+                        <div class="stat-number" id="reportOtherLeaves">0</div>
+                        <div class="stat-label">ลาประเภทอื่นๆ</div>
+                    </div>
                 </div>
 
                 <div style="margin-bottom: 25px;">
@@ -354,50 +380,6 @@
                         <div style="font-size: 3rem; margin-bottom: 15px;">📊</div>
                         <div style="font-size: 1.1rem;">เลือกช่วงเวลาและกดปุ่ม "แสดงรายงาน"</div>
                     </div>
-                </div>
-
-                <!-- Daily Leave Calendar -->
-                <div style="background: var(--bg); padding: 25px; border-radius: 16px; margin-bottom: 25px;">
-                    <h3 style="font-size: 1.3rem; margin-bottom: 20px; color: var(--text);">📅 ปฏิทินการลารายวัน</h3>
-                    <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center;">
-                        <label style="margin: 0;">เลือกวันที่:</label>
-                        <input type="date" id="dailyLeaveDate" style="width: auto;">
-                        <button class="btn btn-primary" onclick="loadDailyLeave()" style="width: auto; padding: 10px 24px;">ดูข้อมูล</button>
-                    </div>
-                    <div id="dailyLeaveInfo" style="background: white; padding: 20px; border-radius: 12px; min-height: 100px;">
-                        <div style="text-align: center; color: var(--text-light);">เลือกวันที่เพื่อดูข้อมูลการลา</div>
-                    </div>
-                </div>
-
-                <div class="table-container">
-                    <table id="reportsTable">
-                        <thead>
-                            <tr>
-                                <th>ลำดับ</th>
-                                <th>ชื่อ-นามสกุล</th>
-                                <th>ลาป่วย</th>
-                                <th>ลาคลอดบุตร</th>
-                                <th>ลาช่วยภริยา</th>
-                                <th>ลากิจส่วนตัว</th>
-                                <th>ลาพักผ่อน</th>
-                                <th>ลาอุปสมบท</th>
-                                <th>ลาศึกษา</th>
-                                <th>ลาองค์การ<br>ระหว่างประเทศ</th>
-                                <th>ลาฟื้นฟู<br>สมรรถภาพ</th>
-                                <th>ลาติดตาม<br>คู่สมรส</th>
-                                <th>ลาปฏิบัติงาน<br>หน่วยงานอื่น</th>
-                                <th>รวม (วัน)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td colspan="14" style="text-align: center; padding: 40px; color: var(--text-light);">
-                                    <div style="border: 3px solid var(--border); border-top: 3px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px;"></div>
-                                    กำลังโหลดข้อมูล...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>
