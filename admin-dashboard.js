@@ -623,6 +623,27 @@
             });
         };
 
+        window.filterByPosition = function(position) {
+            const rows = document.querySelectorAll('#personnelTableBody tr');
+            rows.forEach(row => {
+                const positionCell = row.cells[2]; // ตำแหน่งอยู่คอลัมน์ที่ 3
+                if (positionCell) {
+                    const positionText = positionCell.textContent;
+                    if (position === 'all') {
+                        row.style.display = '';
+                    } else if (position === 'ผู้บริหาร') {
+                        row.style.display = positionText.includes('ผู้บริหาร') ? '' : 'none';
+                    } else if (position === 'ครู') {
+                        row.style.display = positionText.includes('ครู') ? '' : 'none';
+                    } else if (position === 'เจ้าหน้าที่') {
+                        row.style.display = positionText.includes('เจ้าหน้าที่') ? '' : 'none';
+                    } else {
+                        row.style.display = '';
+                    }
+                }
+            });
+        };
+
         // Load reports data - UPDATED
         async function loadReportsData() {
             try {
