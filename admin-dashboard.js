@@ -1216,6 +1216,12 @@
                 document.getElementById('editEmail').value = user.email || '';
                 document.getElementById('editPhone').value = user.phone || '';
                 
+                // Hide sidebar on mobile when modal opens
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar && window.innerWidth <= 768) {
+                    sidebar.classList.remove('mobile-show');
+                }
+                
                 document.getElementById('editPersonnelModal').classList.add('active');
             } catch (error) {
                 console.error('Error loading personnel data:', error);
@@ -1245,6 +1251,12 @@
 
         // Export to Excel - UPDATED WITH TIMES AND DAYS
         window.exportToExcel = async function() {
+            // Check if XLSX library is loaded
+            if (typeof XLSX === 'undefined') {
+                alert('กรุณารอสักครู่ให้ระบบโหลดเสร็จ แล้วลองอีกครั้ง');
+                return;
+            }
+
             try {
                 const startDate = document.getElementById('reportStartDate').value;
                 const endDate = document.getElementById('reportEndDate').value;
@@ -1265,7 +1277,6 @@
                         userLeaveDetail.set(docSnap.id, {
                             name: user.name,
                             position: user.position || '',
-                            // Each leave type has count and days
                             sick: { count: 0, days: 0 },
                             maternity: { count: 0, days: 0 },
                             helpWife: { count: 0, days: 0 },
@@ -1320,55 +1331,58 @@
                     }
                 });
 
-                // Create beautiful Excel-like CSV with merged headers
-                let csv = '\uFEFF';
-                
-                // Title row
+                // Prepare data for Excel
                 const formattedStartDate = new Date(startDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
                 const formattedEndDate = new Date(endDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
-                csv += `รายงานสรุปการลาบุคลากร\n`;
-                csv += `ช่วงเวลา: ${formattedStartDate} ถึง ${formattedEndDate}\n`;
-                csv += `วันที่ออกรายงาน: ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}\n`;
-                csv += `\n`;
                 
-                // Main header
-                csv += 'ลำดับ,ชื่อ-นามสกุล,ตำแหน่ง,';
-                csv += 'ลาป่วย (ครั้ง),ลาป่วย (วัน),';
-                csv += 'ลาคลอด (ครั้ง),ลาคลอด (วัน),';
-                csv += 'ลาช่วยภริยา (ครั้ง),ลาช่วยภริยา (วัน),';
-                csv += 'ลากิจ (ครั้ง),ลากิจ (วัน),';
-                csv += 'ลาพักผ่อน (ครั้ง),ลาพักผ่อน (วัน),';
-                csv += 'ลาอุปสมบท (ครั้ง),ลาอุปสมบท (วัน),';
-                csv += 'ลาศึกษา (ครั้ง),ลาศึกษา (วัน),';
-                csv += 'ลาองค์การฯ (ครั้ง),ลาองค์การฯ (วัน),';
-                csv += 'ลาฟื้นฟูฯ (ครั้ง),ลาฟื้นฟูฯ (วัน),';
-                csv += 'ลาติดตามฯ (ครั้ง),ลาติดตามฯ (วัน),';
-                csv += 'ลาปฏิบัติงานฯ (ครั้ง),ลาปฏิบัติงานฯ (วัน),';
-                csv += 'รวมทั้งหมด (ครั้ง),รวมทั้งหมด (วัน)\n';
+                const data = [];
+                
+                // Header rows
+                data.push(['รายงานสรุปการลาบุคลากร']);
+                data.push([`ช่วงเวลา: ${formattedStartDate} ถึง ${formattedEndDate}`]);
+                data.push([`วันที่ออกรายงาน: ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`]);
+                data.push([]);
+                
+                // Column headers
+                data.push([
+                    'ลำดับ', 'ชื่อ-นามสกุล', 'ตำแหน่ง',
+                    'ลาป่วย (ครั้ง)', 'ลาป่วย (วัน)',
+                    'ลาคลอด (ครั้ง)', 'ลาคลอด (วัน)',
+                    'ลาช่วยภริยา (ครั้ง)', 'ลาช่วยภริยา (วัน)',
+                    'ลากิจ (ครั้ง)', 'ลากิจ (วัน)',
+                    'ลาพักผ่อน (ครั้ง)', 'ลาพักผ่อน (วัน)',
+                    'ลาอุปสมบท (ครั้ง)', 'ลาอุปสมบท (วัน)',
+                    'ลาศึกษา (ครั้ง)', 'ลาศึกษา (วัน)',
+                    'ลาองค์การฯ (ครั้ง)', 'ลาองค์การฯ (วัน)',
+                    'ลาฟื้นฟูฯ (ครั้ง)', 'ลาฟื้นฟูฯ (วัน)',
+                    'ลาติดตามฯ (ครั้ง)', 'ลาติดตามฯ (วัน)',
+                    'ลาปฏิบัติงานฯ (ครั้ง)', 'ลาปฏิบัติงานฯ (วัน)',
+                    'รวมทั้งหมด (ครั้ง)', 'รวมทั้งหมด (วัน)'
+                ]);
 
                 const sortedUsers = Array.from(userLeaveDetail.values())
-                    .filter(user => user.totalCount > 0) // Only show users with leaves
-                    .sort((a, b) => b.totalDays - a.totalDays); // Sort by total days
+                    .filter(user => user.totalCount > 0)
+                    .sort((a, b) => b.totalDays - a.totalDays);
                 
                 sortedUsers.forEach((user, index) => {
-                    csv += `${index + 1},"${user.name}","${user.position}",`;
-                    csv += `${user.sick.count},${user.sick.days},`;
-                    csv += `${user.maternity.count},${user.maternity.days},`;
-                    csv += `${user.helpWife.count},${user.helpWife.days},`;
-                    csv += `${user.personal.count},${user.personal.days},`;
-                    csv += `${user.vacation.count},${user.vacation.days},`;
-                    csv += `${user.ordination.count},${user.ordination.days},`;
-                    csv += `${user.study.count},${user.study.days},`;
-                    csv += `${user.international.count},${user.international.days},`;
-                    csv += `${user.rehab.count},${user.rehab.days},`;
-                    csv += `${user.followSpouse.count},${user.followSpouse.days},`;
-                    csv += `${user.workOther.count},${user.workOther.days},`;
-                    csv += `${user.totalCount},${user.totalDays}\n`;
+                    data.push([
+                        index + 1, user.name, user.position,
+                        user.sick.count, user.sick.days,
+                        user.maternity.count, user.maternity.days,
+                        user.helpWife.count, user.helpWife.days,
+                        user.personal.count, user.personal.days,
+                        user.vacation.count, user.vacation.days,
+                        user.ordination.count, user.ordination.days,
+                        user.study.count, user.study.days,
+                        user.international.count, user.international.days,
+                        user.rehab.count, user.rehab.days,
+                        user.followSpouse.count, user.followSpouse.days,
+                        user.workOther.count, user.workOther.days,
+                        user.totalCount, user.totalDays
+                    ]);
                 });
                 
                 // Summary row
-                csv += `\n`;
-                csv += `สรุปรวม,,,`;
                 const totals = sortedUsers.reduce((acc, user) => {
                     acc.sick.count += user.sick.count;
                     acc.sick.days += user.sick.days;
@@ -1402,32 +1416,58 @@
                     followSpouse: {count:0, days:0}, workOther: {count:0, days:0}, totalCount: 0, totalDays: 0
                 });
                 
-                csv += `${totals.sick.count},${totals.sick.days},`;
-                csv += `${totals.maternity.count},${totals.maternity.days},`;
-                csv += `${totals.helpWife.count},${totals.helpWife.days},`;
-                csv += `${totals.personal.count},${totals.personal.days},`;
-                csv += `${totals.vacation.count},${totals.vacation.days},`;
-                csv += `${totals.ordination.count},${totals.ordination.days},`;
-                csv += `${totals.study.count},${totals.study.days},`;
-                csv += `${totals.international.count},${totals.international.days},`;
-                csv += `${totals.rehab.count},${totals.rehab.days},`;
-                csv += `${totals.followSpouse.count},${totals.followSpouse.days},`;
-                csv += `${totals.workOther.count},${totals.workOther.days},`;
-                csv += `${totals.totalCount},${totals.totalDays}\n`;
+                data.push([]);
+                data.push([
+                    'สรุปรวม', '', '',
+                    totals.sick.count, totals.sick.days,
+                    totals.maternity.count, totals.maternity.days,
+                    totals.helpWife.count, totals.helpWife.days,
+                    totals.personal.count, totals.personal.days,
+                    totals.vacation.count, totals.vacation.days,
+                    totals.ordination.count, totals.ordination.days,
+                    totals.study.count, totals.study.days,
+                    totals.international.count, totals.international.days,
+                    totals.rehab.count, totals.rehab.days,
+                    totals.followSpouse.count, totals.followSpouse.days,
+                    totals.workOther.count, totals.workOther.days,
+                    totals.totalCount, totals.totalDays
+                ]);
                 
-                csv += `\n`;
-                csv += `หมายเหตุ: แสดงเฉพาะบุคลากรที่มีการลาในช่วงเวลาที่เลือก\n`;
-                csv += `จำนวนบุคลากรที่ลา: ${sortedUsers.length} คน\n`;
+                data.push([]);
+                data.push(['หมายเหตุ: แสดงเฉพาะบุคลากรที่มีการลาในช่วงเวลาที่เลือก']);
+                data.push([`จำนวนบุคลากรที่ลา: ${sortedUsers.length} คน`]);
 
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-                link.setAttribute('download', `รายงานการลา_${startDate}_${endDate}.csv`);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                // Create workbook
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(data);
+
+                // Set column widths
+                ws['!cols'] = [
+                    { wch: 8 },   // ลำดับ
+                    { wch: 25 },  // ชื่อ
+                    { wch: 20 },  // ตำแหน่ง
+                    { wch: 12 }, { wch: 12 }, // ลาป่วย
+                    { wch: 12 }, { wch: 12 }, // ลาคลอด
+                    { wch: 14 }, { wch: 14 }, // ลาช่วยภริยา
+                    { wch: 12 }, { wch: 12 }, // ลากิจ
+                    { wch: 14 }, { wch: 14 }, // ลาพักผ่อน
+                    { wch: 14 }, { wch: 14 }, // ลาอุปสมบท
+                    { wch: 12 }, { wch: 12 }, // ลาศึกษา
+                    { wch: 14 }, { wch: 14 }, // ลาองค์การฯ
+                    { wch: 13 }, { wch: 13 }, // ลาฟื้นฟูฯ
+                    { wch: 14 }, { wch: 14 }, // ลาติดตามฯ
+                    { wch: 16 }, { wch: 16 }, // ลาปฏิบัติงานฯ
+                    { wch: 15 }, { wch: 15 }  // รวม
+                ];
+
+                // Add worksheet to workbook
+                XLSX.utils.book_append_sheet(wb, ws, 'รายงานการลา');
+
+                // Generate filename
+                const filename = `รายงานการลา_${startDate}_${endDate}.xlsx`;
+
+                // Save file
+                XLSX.writeFile(wb, filename);
 
                 alert('✅ ส่งออกรายงานเรียบร้อยแล้ว');
 
@@ -2309,58 +2349,71 @@
 
         // Export individual report to Excel
         window.exportIndividualReport = function() {
-            if (!window.individualReportData || !window.individualReportData.users || window.individualReportData.users.length === 0) {
-                alert('กรุณาแสดงรายงานก่อนส่งออก');
+            // Check if XLSX library is loaded
+            if (typeof XLSX === 'undefined') {
+                alert('กรุณารอสักครู่ให้ระบบโหลดเสร็จ แล้วลองอีกครั้ง');
                 return;
             }
 
-            // Create workbook
-            const wb = XLSX.utils.book_new();
+            if (!window.individualReportData || !window.individualReportData.users || window.individualReportData.users.length === 0) {
+                alert('กรุณาแสดงรายงานก่อนส่งออก Excel');
+                return;
+            }
 
-            // Prepare data
-            const data = [
-                ['รายงานการไปราชการและเข้าสาย (รายบุคคล)'],
-                [`ช่วงเวลา: ${window.individualReportData.dateRange}`],
-                [],
-                ['ลำดับ', 'ชื่อ-นามสกุล', 'ตำแหน่ง', 'ไปราชการ (ครั้ง)', 'เข้าสาย (ครั้ง)']
-            ];
+            try {
+                // Create workbook
+                const wb = XLSX.utils.book_new();
 
-            window.individualReportData.users.forEach((user, index) => {
-                data.push([
-                    index + 1,
-                    user.name,
-                    user.position,
-                    user.trips,
-                    user.lates
-                ]);
-            });
+                // Prepare data
+                const data = [
+                    ['รายงานการไปราชการและเข้าสาย (รายบุคคล)'],
+                    [`ช่วงเวลา: ${window.individualReportData.dateRange}`],
+                    [],
+                    ['ลำดับ', 'ชื่อ-นามสกุล', 'ตำแหน่ง', 'ไปราชการ (ครั้ง)', 'เข้าสาย (ครั้ง)']
+                ];
 
-            // Add summary
-            data.push([]);
-            data.push(['รวม', '', '', window.individualReportData.totals.trips, window.individualReportData.totals.lates]);
+                window.individualReportData.users.forEach((user, index) => {
+                    data.push([
+                        index + 1,
+                        user.name,
+                        user.position,
+                        user.trips,
+                        user.lates
+                    ]);
+                });
 
-            // Create worksheet
-            const ws = XLSX.utils.aoa_to_sheet(data);
+                // Add summary
+                data.push([]);
+                data.push(['รวม', '', '', window.individualReportData.totals.trips, window.individualReportData.totals.lates]);
 
-            // Set column widths
-            ws['!cols'] = [
-                { wch: 8 },   // ลำดับ
-                { wch: 30 },  // ชื่อ
-                { wch: 25 },  // ตำแหน่ง
-                { wch: 15 },  // ไปราชการ
-                { wch: 12 }   // เข้าสาย
-            ];
+                // Create worksheet
+                const ws = XLSX.utils.aoa_to_sheet(data);
 
-            // Add worksheet to workbook
-            XLSX.utils.book_append_sheet(wb, ws, 'รายงานไปราชการและเข้าสาย');
+                // Set column widths
+                ws['!cols'] = [
+                    { wch: 8 },   // ลำดับ
+                    { wch: 30 },  // ชื่อ
+                    { wch: 25 },  // ตำแหน่ง
+                    { wch: 15 },  // ไปราชการ
+                    { wch: 12 }   // เข้าสาย
+                ];
 
-            // Generate filename
-            const startDate = document.getElementById('individualStartDate').value;
-            const endDate = document.getElementById('individualEndDate').value;
-            const filename = `รายงานไปราชการและเข้าสาย_${startDate}_${endDate}.xlsx`;
+                // Add worksheet to workbook
+                XLSX.utils.book_append_sheet(wb, ws, 'รายงานไปราชการและเข้าสาย');
 
-            // Save file
-            XLSX.writeFile(wb, filename);
+                // Generate filename
+                const startDate = document.getElementById('individualStartDate').value;
+                const endDate = document.getElementById('individualEndDate').value;
+                const filename = `รายงานไปราชการและเข้าสาย_${startDate}_${endDate}.xlsx`;
+
+                // Save file
+                XLSX.writeFile(wb, filename);
+                
+                console.log('Excel file exported successfully');
+            } catch (error) {
+                console.error('Error exporting Excel:', error);
+                alert('เกิดข้อผิดพลาดในการส่งออก Excel: ' + error.message);
+            }
         };
 
         // Wait for DOM to be ready
