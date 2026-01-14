@@ -1879,6 +1879,9 @@
             document.getElementById('individualStartDate').valueAsDate = firstDay;
             document.getElementById('individualEndDate').valueAsDate = today;
             
+            // Load individual report stats immediately
+            loadIndividualReportStats();
+            
             // Set today for daily reports
             document.getElementById('dailyReportDate').valueAsDate = today;
             document.getElementById('dailyTripDate').valueAsDate = today;
@@ -2093,6 +2096,62 @@
                     row.style.display = name.includes(searchText.toLowerCase()) ? '' : 'none';
                 }
             });
+        };
+
+        // Load individual report stats only (for cards)
+        window.loadIndividualReportStats = async function() {
+            try {
+                const startDate = document.getElementById('individualStartDate').value;
+                const endDate = document.getElementById('individualEndDate').value;
+
+                if (!startDate || !endDate) {
+                    return;
+                }
+
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
+
+                // Get all users
+                const usersSnapshot = await getDocs(collection(db, 'users'));
+                let userCount = 0;
+                usersSnapshot.forEach(doc => {
+                    const userData = doc.data();
+                    if (userData.role === 'teacher') {
+                        userCount++;
+                    }
+                });
+
+                // Count trips
+                const tripsSnapshot = await getDocs(collection(db, 'official_trips'));
+                let totalTrips = 0;
+                tripsSnapshot.forEach(doc => {
+                    const trip = doc.data();
+                    const tripDate = trip.startDate ? new Date(trip.startDate) : (trip.date ? new Date(trip.date) : null);
+                    if (tripDate && tripDate >= start && tripDate <= end) {
+                        totalTrips++;
+                    }
+                });
+
+                // Count late arrivals
+                const latesSnapshot = await getDocs(collection(db, 'late_arrivals'));
+                let totalLates = 0;
+                latesSnapshot.forEach(doc => {
+                    const late = doc.data();
+                    const lateDate = new Date(late.date);
+                    if (lateDate >= start && lateDate <= end) {
+                        totalLates++;
+                    }
+                });
+
+                // Update stats
+                document.getElementById('reportTotalTrips').textContent = totalTrips;
+                document.getElementById('reportTotalLates').textContent = totalLates;
+                document.getElementById('reportTotalPeople').textContent = userCount;
+
+            } catch (error) {
+                console.error('Error loading individual report stats:', error);
+            }
         };
 
         // Load individual report
