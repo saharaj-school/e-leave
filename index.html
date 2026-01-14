@@ -91,25 +91,25 @@
         .leave-summary {
             background: white;
             border-radius: 12px;
-            padding: 25px;
+            padding: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
         .summary-header {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
             border-bottom: 2px solid var(--border);
         }
 
         .summary-icon {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
         }
 
         .summary-title {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 600;
             color: var(--text);
         }
@@ -117,38 +117,58 @@
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 25px;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
         .stat-card {
-            background: var(--bg);
-            padding: 16px;
+            background: linear-gradient(135deg, var(--bg) 0%, #f0f4f8 100%);
+            padding: 12px;
             border-radius: 10px;
             text-align: center;
             border: 1px solid var(--border);
             transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), #3b82f6);
         }
 
         .stat-card:hover {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
         }
 
         .stat-number {
-            font-size: 1.75rem;
+            font-size: 1.6rem;
             font-weight: 700;
             color: var(--primary);
+            margin-bottom: 2px;
+        }
+
+        .stat-sublabel {
+            font-size: 0.7rem;
+            color: var(--text-light);
             margin-bottom: 4px;
         }
 
         .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-light);
+            font-size: 0.75rem;
+            color: var(--text);
+            font-weight: 500;
         }
 
         .today-section {
-            margin-top: 20px;
-            padding-top: 20px;
+            margin-top: 18px;
+            padding-top: 18px;
             border-top: 2px solid var(--border);
         }
 
@@ -159,59 +179,71 @@
         }
 
         .today-header {
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             color: var(--text);
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .leave-item {
-            background: var(--bg);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            border-left: 3px solid var(--primary);
-        }
-
-        .trip-item {
-            background: var(--bg);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            border-left: 3px solid #3b82f6;
-        }
-
-        .item-name {
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 4px;
-            font-size: 0.9rem;
-        }
-
-        .item-detail {
-            font-size: 0.8rem;
-            color: var(--text-light);
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
+        .leave-item {
+            background: linear-gradient(135deg, #fff 0%, var(--bg) 100%);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--primary);
+            transition: all 0.2s ease;
+        }
+
+        .leave-item:hover {
+            transform: translateX(3px);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+        }
+
+        .trip-item {
+            background: linear-gradient(135deg, #fff 0%, #eff6ff 100%);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid #3b82f6;
+            transition: all 0.2s ease;
+        }
+
+        .trip-item:hover {
+            transform: translateX(3px);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 3px;
+            font-size: 0.85rem;
+        }
+
+        .item-detail {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
         .no-items {
             text-align: center;
-            padding: 30px 20px;
+            padding: 25px 15px;
             color: var(--text-light);
         }
 
         .no-items-icon {
-            font-size: 2.5rem;
-            margin-bottom: 8px;
+            font-size: 2rem;
+            margin-bottom: 6px;
         }
 
         .no-items-text {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
 
         /* Right Side - Login Form */
@@ -469,10 +501,12 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" id="pendingLeaves">0</div>
+                    <div class="stat-sublabel" id="pendingDays">0 วัน</div>
                     <div class="stat-label">รออนุมัติ</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" id="approvedThisMonth">0</div>
+                    <div class="stat-sublabel" id="approvedDays">0 วัน</div>
                     <div class="stat-label">อนุมัติเดือนนี้</div>
                 </div>
                 <div class="stat-card">
@@ -599,6 +633,13 @@
                 const pendingQuery = query(collection(db, 'leaves'), where('status', '==', 'รออนุมัติ'));
                 const pendingSnapshot = await getDocs(pendingQuery);
                 const pendingCount = pendingSnapshot.size;
+                
+                // Count pending days
+                let pendingDays = 0;
+                pendingSnapshot.forEach(docSnap => {
+                    const leave = docSnap.data();
+                    pendingDays += leave.days || 0;
+                });
 
                 // Count approved this month
                 const now = new Date();
@@ -606,6 +647,7 @@
                 firstDayOfMonth.setHours(0, 0, 0, 0);
                 
                 let approvedCount = 0;
+                let approvedDays = 0;
                 const allLeavesSnapshot = await getDocs(collection(db, 'leaves'));
                 
                 allLeavesSnapshot.forEach(docSnap => {
@@ -614,6 +656,7 @@
                         const approvedDate = new Date(leave.approvedDate);
                         if (approvedDate >= firstDayOfMonth) {
                             approvedCount++;
+                            approvedDays += leave.days || 0;
                         }
                     }
                 });
@@ -682,7 +725,9 @@
                 // Update stats
                 document.getElementById('totalPersonnel').textContent = totalPersonnel;
                 document.getElementById('pendingLeaves').textContent = pendingCount;
+                document.getElementById('pendingDays').textContent = `${pendingDays} วัน`;
                 document.getElementById('approvedThisMonth').textContent = approvedCount;
+                document.getElementById('approvedDays').textContent = `${approvedDays} วัน`;
                 document.getElementById('leavingToday').textContent = todayLeaves.length;
 
                 // Update today's leaves list
