@@ -438,11 +438,8 @@
 
             <!-- Individual Summary Report -->
             <div class="card" style="margin-top: 25px;">
-                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div class="card-header">
                     <h2 class="card-title">🚗⏰ รายงานการไปราชการและเข้าสาย (รายบุคคล)</h2>
-                    <button class="btn btn-success" onclick="exportIndividualReport()" style="background: #10b981;">
-                        📊 ส่งออก Excel
-                    </button>
                 </div>
 
                 <!-- Stats Overview -->
@@ -466,12 +463,15 @@
 
                 <div style="margin-bottom: 25px;">
                     <label>เลือกช่วงเวลา:</label>
-                    <div style="display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap; align-items: center;">
                         <input type="date" id="individualStartDate" style="width: auto;">
                         <span style="display: flex; align-items: center;">ถึง</span>
                         <input type="date" id="individualEndDate" style="width: auto;">
                         <button class="btn btn-primary" onclick="loadIndividualReport()" style="background: #2563eb;">
                             🔍 แสดงรายงาน
+                        </button>
+                        <button class="btn btn-success" onclick="exportIndividualReport()" style="background: #10b981;">
+                            📊 ส่งออก Excel
                         </button>
                     </div>
                 </div>
