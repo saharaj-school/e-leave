@@ -877,6 +877,229 @@
             }
         }
 
+        /* Contact Popup */
+        .contact-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .contact-popup.show {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .contact-popup-content {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 100%;
+            padding: 0;
+            position: relative;
+            animation: slideUp 0.3s ease;
+            overflow: hidden;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .contact-popup-header {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+
+        .contact-popup-header-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .contact-popup-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .contact-popup-body {
+            padding: 30px;
+        }
+
+        .contact-section {
+            margin-bottom: 25px;
+        }
+
+        .contact-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .contact-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .contact-section-title-icon {
+            font-size: 1.3rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .contact-item:hover {
+            background: #e0e7ff;
+            transform: translateX(5px);
+        }
+
+        .contact-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .contact-item-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .contact-item-info {
+            flex: 1;
+        }
+
+        .contact-item-name {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .contact-item-phone {
+            color: #2563eb;
+            font-size: 1.1rem;
+            font-weight: 500;
+            font-family: 'Courier New', monospace;
+        }
+
+        .contact-developer {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #fbbf24;
+        }
+
+        .contact-developer .contact-item-icon {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .contact-popup-footer {
+            padding: 20px 30px;
+            background: #f8fafc;
+            text-align: center;
+        }
+
+        .contact-popup-close-btn {
+            width: 100%;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .contact-popup-close-btn:hover {
+            background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 480px) {
+            .contact-popup-content {
+                max-width: 100%;
+                margin: 0 10px;
+            }
+
+            .contact-popup-header {
+                padding: 20px;
+            }
+
+            .contact-popup-header-icon {
+                font-size: 2.5rem;
+            }
+
+            .contact-popup-header h2 {
+                font-size: 1.3rem;
+            }
+
+            .contact-popup-body {
+                padding: 20px;
+            }
+
+            .contact-item {
+                padding: 12px;
+                gap: 12px;
+            }
+
+            .contact-item-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.3rem;
+            }
+
+            .contact-item-name {
+                font-size: 0.95rem;
+            }
+
+            .contact-item-phone {
+                font-size: 1rem;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -941,6 +1164,10 @@
             <div class="nav-item" onclick="showSection('history')">
                 <span class="nav-icon">📜</span>
                 <span>ประวัติการลา</span>
+            </div>
+            <div class="nav-item" onclick="showContactPopup()">
+                <span class="nav-icon">📞</span>
+                <span>ติดต่อเจ้าหน้าที่</span>
             </div>
         </div>
 
@@ -2021,6 +2248,41 @@
             localStorage.setItem('fyBannerDismissed', new Date().toDateString());
         };
 
+        // ============================================
+        // CONTACT POPUP FUNCTIONS
+        // ============================================
+
+        // Show contact popup
+        window.showContactPopup = function() {
+            const popup = document.getElementById('contactPopup');
+            popup.classList.add('show');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            
+            // Close sidebar on mobile
+            if (window.innerWidth <= 768) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                if (sidebar && overlay) {
+                    sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
+                }
+            }
+        };
+
+        // Close contact popup
+        window.closeContactPopup = function() {
+            const popup = document.getElementById('contactPopup');
+            popup.classList.remove('show');
+            document.body.style.overflow = ''; // Restore scrolling
+        };
+
+        // Close popup when clicking on overlay
+        window.closeContactPopupOnOverlay = function(event) {
+            if (event.target.id === 'contactPopup') {
+                closeContactPopup();
+            }
+        };
+
         // Check and reset for new fiscal year
         async function checkAndResetFiscalYear() {
             try {
@@ -2060,5 +2322,61 @@
         loadOfficialTripHistory();
         loadLateArrivalHistory();
     </script>
+
+    <!-- Contact Popup -->
+    <div class="contact-popup" id="contactPopup" onclick="closeContactPopupOnOverlay(event)">
+        <div class="contact-popup-content">
+            <div class="contact-popup-header">
+                <div class="contact-popup-header-icon">📞</div>
+                <h2>ติดต่อเจ้าหน้าที่</h2>
+            </div>
+            
+            <div class="contact-popup-body">
+                <div class="contact-section">
+                    <div class="contact-section-title">
+                        <span class="contact-section-title-icon">👥</span>
+                        <span>เจ้าหน้าที่การลา</span>
+                    </div>
+                    
+                    <a href="tel:0972342545" class="contact-item">
+                        <div class="contact-item-icon">📱</div>
+                        <div class="contact-item-info">
+                            <div class="contact-item-name">ครูเอื้ออารี</div>
+                            <div class="contact-item-phone">097-234-2545</div>
+                        </div>
+                    </a>
+                    
+                    <a href="tel:0925070358" class="contact-item">
+                        <div class="contact-item-icon">📱</div>
+                        <div class="contact-item-info">
+                            <div class="contact-item-name">ครูวิภารัตน์</div>
+                            <div class="contact-item-phone">092-507-0358</div>
+                        </div>
+                    </a>
+                </div>
+                
+                <div class="contact-section">
+                    <div class="contact-section-title">
+                        <span class="contact-section-title-icon">💻</span>
+                        <span>พัฒนาระบบโดย</span>
+                    </div>
+                    
+                    <a href="tel:0933281575" class="contact-item contact-developer">
+                        <div class="contact-item-icon">👨‍💻</div>
+                        <div class="contact-item-info">
+                            <div class="contact-item-name">ครูศิริศักดิ์ ปิลอง</div>
+                            <div class="contact-item-phone">093-328-1575</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="contact-popup-footer">
+                <button class="contact-popup-close-btn" onclick="closeContactPopup()">
+                    ปิด
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
