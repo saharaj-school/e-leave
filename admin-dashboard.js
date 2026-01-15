@@ -1900,6 +1900,369 @@
             });
         }
 
+        // Get Thai fiscal year (1 Oct - 30 Sep)
+        function getFiscalYear(date = new Date()) {
+            const year = date.getFullYear();
+            const month = date.getMonth(); // 0-11
+            
+            // If month is 0-8 (Jan-Sep), fiscal year is current year
+            // If month is 9-11 (Oct-Dec), fiscal year is next year
+            return month >= 9 ? year + 1 : year;
+        }
+
+        // Get days until fiscal year end
+        function getDaysUntilFiscalYearEnd() {
+            const today = new Date();
+            const currentFY = getFiscalYear(today);
+            const fyEnd = new Date(currentFY, 8, 30, 23, 59, 59, 999); // Sep 30
+            
+            const diffTime = fyEnd - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            return diffDays > 0 ? diffDays : 0;
+        }
+
+        // Show fiscal year notification banner
+        function showFiscalYearNotification() {
+            const daysLeft = getDaysUntilFiscalYearEnd();
+            const banner = document.getElementById('fiscalYearBanner');
+            const bannerIcon = document.getElementById('bannerIcon');
+            const bannerTitle = document.getElementById('bannerTitle');
+            const bannerMessage = document.getElementById('bannerMessage');
+            
+            // Check if banner was dismissed today
+            const dismissedDate = localStorage.getItem('fyBannerDismissed');
+            const today = new Date().toDateString();
+            
+            if (dismissedDate === today) {
+                return; // Don't show if dismissed today
+            }
+            
+            // Show banner based on days left
+            if (daysLeft > 0 && daysLeft <= 30) {
+                const currentFY = getFiscalYear();
+                
+                // Determine severity and message
+                if (daysLeft === 1) {
+                    banner.className = 'fiscal-year-banner critical';
+                    bannerIcon.textContent = '🚨';
+                    bannerTitle.textContent = '⚠️ การรีเซ็ตปีงบประมาณ - พรุ่งนี้!';
+                    bannerMessage.textContent = `ระบบจะรีเซ็ตวันลาอัตโนมัติในวันพรุ่งนี้ (1 ตุลาคม ${currentFY}) กรุณาตรวจสอบคำขอที่รออนุมัติและดาวน์โหลดรายงานก่อนปีงบสิ้นสุด`;
+                } else if (daysLeft <= 7) {
+                    banner.className = 'fiscal-year-banner critical';
+                    bannerIcon.textContent = '⚠️';
+                    bannerTitle.textContent = '⚠️ การรีเซ็ตปีงบประมาณ - เร็วๆ นี้!';
+                    bannerMessage.textContent = `ระบบจะรีเซ็ตวันลาอัตโนมัติในวันที่ 1 ตุลาคม ${currentFY} (เหลืออีก ${daysLeft} วัน) กรุณาเตรียมพร้อมและดาวน์โหลดรายงานประจำปี`;
+                } else if (daysLeft <= 14) {
+                    banner.className = 'fiscal-year-banner urgent';
+                    bannerIcon.textContent = '📅';
+                    bannerTitle.textContent = 'การรีเซ็ตปีงบประมาณ';
+                    bannerMessage.textContent = `ระบบจะรีเซ็ตวันลาอัตโนมัติในวันที่ 1 ตุลาคม ${currentFY} (เหลืออีก ${daysLeft} วัน)`;
+                } else {
+                    banner.className = 'fiscal-year-banner';
+                    bannerIcon.textContent = '📢';
+                    bannerTitle.textContent = 'แจ้งเตือนปีงบประมาณใหม่';
+                    bannerMessage.textContent = `ระบบจะรีเซ็ตวันลาอัตโนมัติในวันที่ 1 ตุลาคม ${currentFY} (เหลืออีก ${daysLeft} วัน)`;
+                }
+                
+                banner.style.display = 'block';
+                document.body.classList.add('has-banner');
+            } else if (daysLeft === 0) {
+                // Today is Oct 1 - show different message
+                const currentFY = getFiscalYear();
+                banner.className = 'fiscal-year-banner critical';
+                bannerIcon.textContent = '🎉';
+                bannerTitle.textContent = 'วันนี้คือวันรีเซ็ตปีงบประมาณ!';
+                bannerMessage.textContent = `ระบบกำลังรีเซ็ตวันลาสำหรับปีงบประมาณ ${currentFY} โปรดรอสักครู่...`;
+                banner.style.display = 'block';
+                document.body.classList.add('has-banner');
+            }
+        }
+
+        // Close fiscal year banner
+        window.closeFiscalYearBanner = function() {
+            const banner = document.getElementById('fiscalYearBanner');
+            banner.style.display = 'none';
+            document.body.classList.remove('has-banner');
+            
+            // Save dismissal date
+            localStorage.setItem('fyBannerDismissed', new Date().toDateString());
+        };
+
+        // Show fiscal year summary
+        window.showFiscalYearSummary = async function() {
+            try {
+                const currentFY = getFiscalYear();
+                const fyStart = new Date(currentFY - 1, 9, 1);
+                const fyEnd = new Date(currentFY, 8, 30, 23, 59, 59, 999);
+                const daysLeft = getDaysUntilFiscalYearEnd();
+                
+                // Get statistics
+                const leavesSnapshot = await getDocs(collection(db, 'leaves'));
+                const tripsSnapshot = await getDocs(collection(db, 'official_trips'));
+                const latesSnapshot = await getDocs(collection(db, 'late_arrivals'));
+                const usersSnapshot = await getDocs(collection(db, 'users'));
+                
+                let pendingLeaves = 0;
+                let approvedLeaves = 0;
+                let rejectedLeaves = 0;
+                let totalTrips = 0;
+                let totalLates = 0;
+                let usersWithNoLeaveLeft = 0;
+                let usersWithHighUsage = 0;
+                let usersWithLowUsage = 0;
+                
+                leavesSnapshot.forEach(doc => {
+                    const leave = doc.data();
+                    const leaveDate = new Date(leave.startDate);
+                    
+                    if (leaveDate >= fyStart && leaveDate <= fyEnd) {
+                        if (leave.status === 'รออนุมัติ') pendingLeaves++;
+                        else if (leave.status === 'อนุมัติแล้ว') approvedLeaves++;
+                        else if (leave.status === 'ปฏิเสธ') rejectedLeaves++;
+                    }
+                });
+                
+                tripsSnapshot.forEach(doc => {
+                    const trip = doc.data();
+                    const tripDate = new Date(trip.startDate || trip.date);
+                    if (tripDate >= fyStart && tripDate <= fyEnd) totalTrips++;
+                });
+                
+                latesSnapshot.forEach(doc => {
+                    const late = doc.data();
+                    const lateDate = new Date(late.date);
+                    if (lateDate >= fyStart && lateDate <= fyEnd) totalLates++;
+                });
+                
+                usersSnapshot.forEach(doc => {
+                    const user = doc.data();
+                    if (user.role === 'teacher') {
+                        const sickRemaining = user.sickLeaveRemaining || 30;
+                        const personalRemaining = user.personalLeaveRemaining || 12;
+                        
+                        const sickUsage = ((30 - sickRemaining) / 30) * 100;
+                        const personalUsage = ((12 - personalRemaining) / 12) * 100;
+                        const avgUsage = (sickUsage + personalUsage) / 2;
+                        
+                        if (sickRemaining === 0 && personalRemaining === 0) {
+                            usersWithNoLeaveLeft++;
+                        } else if (avgUsage >= 80) {
+                            usersWithHighUsage++;
+                        } else if (avgUsage <= 50) {
+                            usersWithLowUsage++;
+                        }
+                    }
+                });
+                
+                const summaryHTML = `
+                    <div style="max-width: 700px; margin: 0 auto; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <div style="font-size: 3rem; margin-bottom: 10px;">📊</div>
+                            <h2 style="margin: 0; color: var(--primary); font-size: 1.8rem;">สรุปปีงบประมาณ ${currentFY - 1}</h2>
+                            <p style="color: var(--text-light); margin: 10px 0 0 0;">
+                                ช่วงเวลา: 1 ตุลาคม ${currentFY - 2} - 30 กันยายน ${currentFY - 1}
+                            </p>
+                            ${daysLeft > 0 ? `
+                                <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 8px; border: 2px solid #fbbf24;">
+                                    <div style="font-size: 2rem; margin-bottom: 5px;">⏰</div>
+                                    <strong style="color: #92400e; font-size: 1.2rem;">เหลือเวลาอีก ${daysLeft} วัน</strong>
+                                    <div style="color: #92400e; font-size: 0.9rem; margin-top: 5px;">ก่อนระบบรีเซ็ตอัตโนมัติ</div>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                            <div style="padding: 20px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 10px; text-align: center;">
+                                <div style="font-size: 2rem; margin-bottom: 8px;">📝</div>
+                                <div style="font-size: 2rem; font-weight: bold; color: #1e40af;">${approvedLeaves}</div>
+                                <div style="color: #1e40af; margin-top: 5px;">การลา (อนุมัติ)</div>
+                            </div>
+                            <div style="padding: 20px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 10px; text-align: center;">
+                                <div style="font-size: 2rem; margin-bottom: 8px;">⏳</div>
+                                <div style="font-size: 2rem; font-weight: bold; color: #92400e;">${pendingLeaves}</div>
+                                <div style="color: #92400e; margin-top: 5px;">รออนุมัติ</div>
+                            </div>
+                            <div style="padding: 20px; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-radius: 10px; text-align: center;">
+                                <div style="font-size: 2rem; margin-bottom: 8px;">🚗</div>
+                                <div style="font-size: 2rem; font-weight: bold; color: #166534;">${totalTrips}</div>
+                                <div style="color: #166534; margin-top: 5px;">ไปราชการ (ครั้ง)</div>
+                            </div>
+                            <div style="padding: 20px; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-radius: 10px; text-align: center;">
+                                <div style="font-size: 2rem; margin-bottom: 8px;">⏰</div>
+                                <div style="font-size: 2rem; font-weight: bold; color: #991b1b;">${totalLates}</div>
+                                <div style="color: #991b1b; margin-top: 5px;">เข้าสาย (ครั้ง)</div>
+                            </div>
+                        </div>
+
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 10px; margin-bottom: 25px;">
+                            <h3 style="margin: 0 0 15px 0; color: var(--text); font-size: 1.2rem;">📈 สถิติบุคลากร</h3>
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px;">
+                                    <span style="color: var(--text);">ใช้วันลาหมดแล้ว:</span>
+                                    <strong style="color: ${usersWithNoLeaveLeft > 0 ? '#dc2626' : '#059669'}; font-size: 1.2rem;">${usersWithNoLeaveLeft} คน</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px;">
+                                    <span style="color: var(--text);">ใช้วันลามากกว่า 80%:</span>
+                                    <strong style="color: ${usersWithHighUsage > 0 ? '#f59e0b' : '#059669'}; font-size: 1.2rem;">${usersWithHighUsage} คน</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px;">
+                                    <span style="color: var(--text);">ใช้วันลาน้อยกว่า 50%:</span>
+                                    <strong style="color: #059669; font-size: 1.2rem;">${usersWithLowUsage} คน</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${pendingLeaves > 0 ? `
+                            <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #fbbf24;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-size: 1.5rem;">⚠️</span>
+                                    <div>
+                                        <strong style="color: #92400e;">มีคำขอที่รออนุมัติ ${pendingLeaves} คำขอ</strong>
+                                        <div style="color: #92400e; font-size: 0.9rem; margin-top: 3px;">
+                                            กรุณาตรวจสอบและอนุมัติก่อนปีงบสิ้นสุด
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div style="background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); padding: 20px; border-radius: 10px; margin-bottom: 25px;">
+                            <h3 style="margin: 0 0 10px 0; color: #3730a3; font-size: 1.1rem;">💡 เมื่อระบบรีเซ็ต (1 ตุลาคม ${currentFY})</h3>
+                            <ul style="margin: 0; padding-left: 20px; color: #3730a3;">
+                                <li style="margin-bottom: 8px;">วันลาคงเหลือของทุกคนจะถูกรีเซ็ตเป็นค่าเริ่มต้น</li>
+                                <li style="margin-bottom: 8px;">สถิติไปราชการและเข้าสายจะเริ่มนับใหม่</li>
+                                <li style="margin-bottom: 8px;">ประวัติการลาทั้งหมดยังคงอยู่และสามารถดูย้อนหลังได้</li>
+                            </ul>
+                        </div>
+
+                        <div style="display: flex; gap: 12px; justify-content: center;">
+                            <button onclick="exportFiscalYearReport()" class="btn btn-primary" style="background: var(--primary); padding: 12px 24px;">
+                                📊 ดาวน์โหลดรายงาน Excel
+                            </button>
+                            <button onclick="closeModal()" class="btn" style="background: var(--text-light); color: white; padding: 12px 24px;">
+                                ปิด
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.style.display = 'flex';
+                modal.style.zIndex = '10001';
+                modal.innerHTML = summaryHTML;
+                modal.onclick = function(e) {
+                    if (e.target === modal) {
+                        document.body.removeChild(modal);
+                    }
+                };
+                
+                window.closeModal = function() {
+                    document.body.removeChild(modal);
+                };
+                
+                document.body.appendChild(modal);
+                
+            } catch (error) {
+                console.error('Error showing fiscal year summary:', error);
+                alert('เกิดข้อผิดพลาดในการแสดงสรุปข้อมูล');
+            }
+        };
+
+        // Export fiscal year report
+        window.exportFiscalYearReport = async function() {
+            try {
+                if (typeof XLSX === 'undefined') {
+                    alert('กรุณารอสักครู่ให้ระบบโหลดเสร็จ แล้วลองอีกครั้ง');
+                    return;
+                }
+
+                const currentFY = getFiscalYear();
+                const fyStart = new Date(currentFY - 1, 9, 1);
+                const fyEnd = new Date(currentFY, 8, 30, 23, 59, 59, 999);
+                
+                const fyStartStr = `${currentFY - 1}-10-01`;
+                const fyEndStr = `${currentFY}-09-30`;
+                
+                // Use existing export function with fiscal year dates
+                document.getElementById('reportStartDate').value = fyStartStr;
+                document.getElementById('reportEndDate').value = fyEndStr;
+                
+                await exportToExcel();
+                
+            } catch (error) {
+                console.error('Error exporting fiscal year report:', error);
+                alert('เกิดข้อผิดพลาดในการส่งออกรายงาน');
+            }
+        };
+
+        // Check and reset for new fiscal year
+        async function checkAndResetFiscalYear() {
+            try {
+                const currentFY = getFiscalYear();
+                console.log('Current fiscal year:', currentFY);
+                
+                // Get system settings
+                const settingsRef = doc(db, 'settings', 'system');
+                const settingsDoc = await getDoc(settingsRef);
+                const lastResetFY = settingsDoc.exists() ? settingsDoc.data().lastResetFiscalYear : null;
+
+                console.log('Last reset fiscal year:', lastResetFY);
+
+                if (lastResetFY !== currentFY) {
+                    console.log(`🔄 New fiscal year detected: ${currentFY}. Resetting leave balances...`);
+
+                    // Get all users
+                    const usersSnapshot = await getDocs(collection(db, 'users'));
+                    let resetCount = 0;
+                    const updatePromises = [];
+
+                    usersSnapshot.forEach(userDoc => {
+                        const userData = userDoc.data();
+                        if (userData.role === 'teacher') {
+                            // Reset all leave types to default values
+                            const resetData = {
+                                sickLeaveRemaining: 30,
+                                personalLeaveRemaining: 12,
+                                maternityLeaveRemaining: 90,
+                                vacationLeaveRemaining: 10,
+                                ordinationLeaveRemaining: 120,
+                                sterilizationLeaveRemaining: 60,
+                                childcareLeaveRemaining: 365,
+                                militaryLeaveRemaining: 60,
+                                studyLeaveRemaining: 365,
+                                followSpouseLeaveRemaining: 365,
+                                workOtherLeaveRemaining: 365
+                            };
+                            
+                            updatePromises.push(updateDoc(doc(db, 'users', userDoc.id), resetData));
+                            resetCount++;
+                        }
+                    });
+
+                    await Promise.all(updatePromises);
+
+                    // Update last reset fiscal year
+                    await setDoc(settingsRef, {
+                        lastResetFiscalYear: currentFY,
+                        lastResetDate: new Date().toISOString()
+                    }, { merge: true });
+
+                    console.log(`✅ Reset complete! ${resetCount} users updated for fiscal year ${currentFY}`);
+                    
+                    // Show notification to user
+                    if (resetCount > 0) {
+                        setTimeout(() => {
+                            alert(`🎉 ระบบได้รีเซ็ตวันลาสำหรับปีงบประมาณ ${currentFY} เรียบร้อยแล้ว\n\nจำนวนบุคลากรที่ได้รับการรีเซ็ต: ${resetCount} คน`);
+                        }, 2000);
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking fiscal year reset:', error);
+            }
+        }
+
         // Initialize on page load
         function initialize() {
             updateAdminDisplay();
@@ -1930,6 +2293,12 @@
             loadDailyReport();
             loadDailyTrip();
             
+            // Check and reset for new fiscal year
+            checkAndResetFiscalYear();
+            
+            // Show fiscal year notification banner
+            showFiscalYearNotification();
+            
             initializeEventListeners();
         }
 
@@ -1938,15 +2307,20 @@
         async function calculateOfficialTripStats() {
             try {
                 const now = new Date();
-                const currentYear = now.getFullYear();
+                const currentFY = getFiscalYear(now);
+                
+                // Fiscal year range: 1 Oct (previous year) - 30 Sep (current fiscal year)
+                const fyStart = new Date(currentFY - 1, 9, 1); // Oct 1 of previous year
+                const fyEnd = new Date(currentFY, 8, 30, 23, 59, 59, 999); // Sep 30 of fiscal year
+                
                 const currentMonth = now.getMonth();
-                const yearStart = new Date(currentYear, 0, 1);
+                const currentYear = now.getFullYear();
                 
                 const tripsSnapshot = await getDocs(collection(db, 'official_trips'));
                 const usersSnapshot = await getDocs(collection(db, 'users'));
                 
-                let yearCount = 0;
-                let yearDays = 0;
+                let fyCount = 0;
+                let fyDays = 0;
                 let monthCount = 0;
                 let monthDays = 0;
                 const uniqueUsers = new Set();
@@ -1959,10 +2333,10 @@
                     // Calculate days
                     const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
                     
-                    // Year stats
-                    if (startDate >= yearStart) {
-                        yearCount++;
-                        yearDays += days;
+                    // Fiscal year stats
+                    if (startDate >= fyStart && startDate <= fyEnd) {
+                        fyCount++;
+                        fyDays += days;
                         uniqueUsers.add(trip.userId);
                     }
                     
@@ -1973,8 +2347,8 @@
                     }
                 });
 
-                document.getElementById('adminTripTotal').textContent = yearCount;
-                document.getElementById('adminTripTotalDays').textContent = `${yearDays} วัน`;
+                document.getElementById('adminTripTotal').textContent = fyCount;
+                document.getElementById('adminTripTotalDays').textContent = `${fyDays} วัน`;
                 document.getElementById('adminTripMonth').textContent = monthCount;
                 document.getElementById('adminTripMonthDays').textContent = `${monthDays} วัน`;
                 document.getElementById('adminTripPeople').textContent = uniqueUsers.size;
@@ -2040,13 +2414,18 @@
         async function calculateLateArrivalStats() {
             try {
                 const now = new Date();
+                const currentFY = getFiscalYear(now);
+                
+                // Fiscal year range: 1 Oct (previous year) - 30 Sep (current fiscal year)
+                const fyStart = new Date(currentFY - 1, 9, 1); // Oct 1 of previous year
+                const fyEnd = new Date(currentFY, 8, 30, 23, 59, 59, 999); // Sep 30 of fiscal year
+                
                 const currentYear = now.getFullYear();
                 const currentMonth = now.getMonth();
-                const yearStart = new Date(currentYear, 0, 1);
                 
                 const latesSnapshot = await getDocs(collection(db, 'late_arrivals'));
                 
-                let yearCount = 0;
+                let fyCount = 0;
                 let monthCount = 0;
                 const uniqueUsers = new Set();
 
@@ -2054,9 +2433,9 @@
                     const late = doc.data();
                     const lateDate = new Date(late.date);
                     
-                    // Year stats
-                    if (lateDate >= yearStart) {
-                        yearCount++;
+                    // Fiscal year stats
+                    if (lateDate >= fyStart && lateDate <= fyEnd) {
+                        fyCount++;
                         uniqueUsers.add(late.userId);
                     }
                     
@@ -2066,7 +2445,7 @@
                     }
                 });
 
-                document.getElementById('adminLateTotal').textContent = yearCount;
+                document.getElementById('adminLateTotal').textContent = fyCount;
                 document.getElementById('adminLateMonth').textContent = monthCount;
                 document.getElementById('adminLatePeople').textContent = uniqueUsers.size;
             } catch (error) {
