@@ -11,6 +11,21 @@
 <body>
     <button class="menu-toggle" onclick="toggleMenu()">☰</button>
 
+    <!-- Fiscal Year Notification Banner -->
+    <div id="fiscalYearBanner" class="fiscal-year-banner" style="display: none;">
+        <div class="banner-content">
+            <div class="banner-icon" id="bannerIcon">⚠️</div>
+            <div class="banner-text">
+                <strong id="bannerTitle">การรีเซ็ตปีงบประมาณ</strong>
+                <p id="bannerMessage">ระบบจะรีเซ็ตวันลาอัตโนมัติในวันที่ 1 ตุลาคม</p>
+            </div>
+            <div class="banner-actions">
+                <button class="banner-btn" onclick="showFiscalYearSummary()">ดูสรุป</button>
+                <button class="banner-close" onclick="closeFiscalYearBanner()">×</button>
+            </div>
+        </div>
+    </div>
+
     <div class="sidebar" id="sidebar">
         <div class="logo">🎓 Admin Panel</div>
         <nav>
@@ -90,13 +105,13 @@
                     <div class="stat-icon">🚗</div>
                     <div class="stat-number" id="dashboardTripCount">0</div>
                     <div class="stat-subnumber" id="dashboardTripDays">0 วัน</div>
-                    <div class="stat-label">ไปราชการ (ปีนี้)</div>
+                    <div class="stat-label">ไปราชการ (ปีงบปัจจุบัน)</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-icon">⏰</div>
                     <div class="stat-number" id="dashboardLateCount">0</div>
                     <div class="stat-subnumber" id="dashboardLateMonth">0 เดือนนี้</div>
-                    <div class="stat-label">เข้าสาย (ปีนี้)</div>
+                    <div class="stat-label">เข้าสาย (ปีงบปัจจุบัน)</div>
                 </div>
             </div>
 
@@ -231,7 +246,7 @@
                         <div class="stat-icon">🚗</div>
                         <div class="stat-number" id="adminTripTotal">0</div>
                         <div class="stat-subnumber" id="adminTripTotalDays">0 วัน</div>
-                        <div class="stat-label">ทั้งหมด (ปีนี้)</div>
+                        <div class="stat-label">ทั้งหมด (ปีงบปัจจุบัน)</div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-icon">📅</div>
@@ -286,7 +301,7 @@
                     <div class="stat-box">
                         <div class="stat-icon">⏰</div>
                         <div class="stat-number" id="adminLateTotal">0</div>
-                        <div class="stat-label">ทั้งหมด (ปีนี้)</div>
+                        <div class="stat-label">ทั้งหมด (ปีงบปัจจุบัน)</div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-icon">📅</div>
