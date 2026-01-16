@@ -14,7 +14,7 @@
         const { 
             getFirestore, collection, query, where, orderBy, 
             onSnapshot, getDocs, doc, getDoc, updateDoc, 
-            setDoc, deleteDoc 
+            setDoc, deleteDoc, limit 
         } = firebaseFirestore;
         const { getAnalytics } = firebaseAnalytics;
 
@@ -2391,7 +2391,7 @@
             }
         };
 
-        // Generate Leave Form 2 (Approved) - WITH TABLE
+        // Generate Leave Form 2 (Approved) - WITH DEBUG
         window.generateLeaveForm2 = async function(leaveId) {
             try {
                 const leaveDoc = await getDoc(doc(db, 'leaves', leaveId));
@@ -2401,6 +2401,8 @@
                 }
 
                 const leave = leaveDoc.data();
+                console.log('=== FORM 2 DEBUG ===');
+                console.log('Leave:', leave.type, leave.days, 'days');
                 
                 if (leave.status !== 'อนุมัติแล้ว') {
                     alert('เอกสารนี้ใช้ได้เฉพาะการลาที่อนุมัติแล้วเท่านั้น');
@@ -2408,49 +2410,37 @@
                 }
 
                 const approvedDate = leave.approvedDate || leave.submittedDate;
-                
-                // Get ALL leave types statistics - OPTIMIZED with limit
                 const allTypes = ['ลาป่วย', 'ลาคลอดบุตร', 'ลาช่วยเหลือภริยาคลอดบุตร', 'ลากิจส่วนตัว', 'ลาพักผ่อน', 'ลาอุปสมบท', 'ลาศึกษา', 'ลาปฏิบัติงานองค์การระหว่างประเทศ', 'ลาฟื้นฟูสมรรถภาพ', 'ลาติดตามคู่สมรส', 'ลาปฏิบัติงานในหน่วยงานอื่น'];
                 
                 const stats = {};
                 allTypes.forEach(t => stats[t] = {times: 0, days: 0});
                 
                 try {
-                    const q = query(
-                        collection(db, 'leaves'), 
-                        where('userId', '==', leave.userId), 
-                        where('status', '==', 'อนุมัติแล้ว'),
-                        limit(100)
-                    );
+                    const q = query(collection(db, 'leaves'), where('userId', '==', leave.userId), where('status', '==', 'อนุมัติแล้ว'), limit(100));
                     const snap = await getDocs(q);
+                    console.log('Query:', snap.size, 'docs');
                     snap.forEach(d => {
-                        if (stats[d.data().type]) {
-                            stats[d.data().type].times++;
-                            stats[d.data().type].days += (d.data().days || 0);
+                        const data = d.data();
+                        if (stats[data.type]) {
+                            stats[data.type].times++;
+                            stats[data.type].days += (data.days || 0);
                         }
                     });
+                    console.log('Stats:', stats);
                 } catch (e) {
-                    console.error('Stats error:', e);
+                    console.error('Query error:', e);
                 }
                 
-                // Build table
-                const tableBody = [[
-                    {text: 'ประเภทการลา', bold: true, fontSize: 10},
-                    {text: 'ลามาแล้ว', bold: true, fontSize: 10},
-                    {text: 'ลาครั้งนี้', bold: true, fontSize: 10},
-                    {text: 'รวม', bold: true, fontSize: 10}
-                ]];
+                const tableBody = [[{text: 'ประเภทการลา', bold: true, fontSize: 10}, {text: 'ลามาแล้ว', bold: true, fontSize: 10}, {text: 'ลาครั้งนี้', bold: true, fontSize: 10}, {text: 'รวม', bold: true, fontSize: 10}]];
                 
                 allTypes.forEach(type => {
                     const s = stats[type];
                     const isCurrent = (type === leave.type);
-                    const timesBefore = isCurrent ? Math.max(0, s.times - 1) : s.times;
-                    const daysBefore = isCurrent ? Math.max(0, s.days - leave.days) : s.days;
-                    
                     if (s.times > 0 || isCurrent) {
+                        const before = isCurrent ? [Math.max(0, s.times-1), Math.max(0, s.days-leave.days)] : [s.times, s.days];
                         tableBody.push([
                             {text: type, fontSize: 9},
-                            {text: `${timesBefore}/${daysBefore}`, fontSize: 9},
+                            {text: `${before[0]}/${before[1]}`, fontSize: 9},
                             {text: isCurrent ? `1/${leave.days}` : '-', fontSize: 9},
                             {text: `${s.times}/${s.days}`, fontSize: 9}
                         ]);
@@ -2458,24 +2448,22 @@
                 });
                 
                 const docDefinition = {
-                    pageSize: 'A4',
-                    pageMargins: [40, 40, 40, 40],
-                    defaultStyle: {font: 'THSarabunNew', fontSize: 12},
+                    pageSize: 'A4', pageMargins: [40,40,40,40], defaultStyle: {font: 'THSarabunNew', fontSize: 12},
                     content: [
                         {text: 'ใบลา', alignment: 'center', fontSize: 16, bold: true, margin: [0,0,0,15]},
                         {text: 'เขียนที่ โรงเรียนสหราษฎร์รังสฤษดิ์', alignment: 'right', fontSize: 12, margin: [0,0,0,3]},
                         {text: `วันที่  ${formatThaiDate(leave.submittedDate)}`, alignment: 'right', fontSize: 12, margin: [0,0,0,15]},
                         {text: `เรื่อง   ${leave.type}`, fontSize: 12, margin: [0,0,0,8]},
                         {text: 'เรียน  ผู้อำนวยการโรงเรียนสหราษฎร์รังสฤษดิ์', fontSize: 12, margin: [0,0,0,10]},
-                        {text: [{text: '       ข้าพเจ้า ', fontSize: 12}, {text: leave.userName, bold: true, fontSize: 12}, {text: ' ตำแหน่ง ', fontSize: 12}, {text: leave.userPosition || 'ครู', bold: true, fontSize: 12}, {text: ' สังกัดสำนักงานคณะกรรมการการศึกษาขั้นพื้นฐาน', fontSize: 12}], margin: [0,0,0,8]},
+                        {text: [{text: '       ข้าพเจ้า ', fontSize: 12}, {text: leave.userName, bold: true, fontSize: 12}, {text: ' ตำแหน่ง ', fontSize: 12}, {text: leave.userPosition||'ครู', bold: true, fontSize: 12}, {text: ' สังกัดสำนักงานคณะกรรมการการศึกษาขั้นพื้นฐาน', fontSize: 12}], margin: [0,0,0,8]},
                         {text: [{text: 'ขอลา ', fontSize: 12}, {text: leave.type, bold: true, fontSize: 12}, {text: ' เนื่องจาก ', fontSize: 12}, {text: leave.reason, bold: true, fontSize: 12}], margin: [0,0,0,8]},
                         {text: [{text: 'ตั้งแต่วันที่ ', fontSize: 12}, {text: formatThaiDate(leave.startDate), bold: true, fontSize: 12}, {text: ' ถึงวันที่ ', fontSize: 12}, {text: formatThaiDate(leave.endDate), bold: true, fontSize: 12}, {text: ' รวม ', fontSize: 12}, {text: `${leave.days}`, bold: true, fontSize: 12}, {text: ' วัน', fontSize: 12}], margin: [0,0,0,8]},
-                        {text: `ในระหว่างลาจะติดต่อกับข้าพเจ้าได้ที่ ${leave.phone || '-'}`, fontSize: 12, margin: [0,0,0,15]},
+                        {text: `ในระหว่างลาจะติดต่อกับข้าพเจ้าได้ที่ ${leave.phone||'-'}`, fontSize: 12, margin: [0,0,0,15]},
                         {text: 'ขอแสดงความนับถือ', alignment: 'center', fontSize: 12, margin: [0,0,0,30]},
                         {text: `(ลงชื่อ) ${leave.userName}`, alignment: 'center', fontSize: 12, margin: [0,0,0,3]},
                         {text: `(${leave.userName})`, alignment: 'center', fontSize: 12, margin: [0,0,0,15]},
                         {text: 'สถิติการลาในปีงบประมาณนี้', bold: true, fontSize: 11, margin: [0,0,0,5]},
-                        {table: {headerRows: 1, widths: ['*', 60, 60, 60], body: tableBody}, layout: {hLineWidth: () => 0.5, vLineWidth: () => 0.5}, margin: [0,0,0,15]},
+                        {table: {headerRows: 1, widths: ['*',60,60,60], body: tableBody}, layout: {hLineWidth: ()=>0.5, vLineWidth: ()=>0.5}, margin: [0,0,0,15]},
                         {text: '(ลงชื่อ) นางสาวเอื้ออารี เอกพันธ์  ผู้ตรวจสอบ', alignment: 'center', fontSize: 12, margin: [0,0,0,3]},
                         {text: '(นางสาวเอื้ออารี เอกพันธ์)', alignment: 'center', fontSize: 12, margin: [0,0,0,3]},
                         {text: 'ตำแหน่ง เจ้าหน้าที่กลุ่มบริหารงานบุคคล', alignment: 'center', fontSize: 12, margin: [0,0,0,3]},
@@ -2494,9 +2482,7 @@
                         {text: `วันที่ ${formatThaiDate(approvedDate)}`, alignment: 'center', fontSize: 12, margin: [0,0,0,0]}
                     ]
                 };
-
                 pdfMake.createPdf(docDefinition).download(`ใบลา_อนุมัติ_${leave.userName}_${formatThaiDate(approvedDate)}.pdf`);
-
             } catch (error) {
                 console.error('PDF Error:', error);
                 alert('เกิดข้อผิดพลาด: ' + error.message);
