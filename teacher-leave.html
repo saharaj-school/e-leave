@@ -1433,7 +1433,7 @@
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, getDocs, doc, getDoc, updateDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, getDocs, doc, getDoc, updateDoc, setDoc, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyCFyb7qu110Nt2_MhRXK-AlSvu1Hhj2cJU",
@@ -2301,7 +2301,7 @@
         // Generate approved leave PDF for teacher - Simple Version
 
         // Generate approved leave PDF for teacher
-        // Generate approved leave PDF for teacher - WITH TABLE
+        // Generate approved leave PDF for teacher - FIXED STATISTICS
         window.generateMyLeavePDF = async function(leaveId) {
             try {
                 const leaveDoc = await getDoc(doc(db, 'leaves', leaveId));
@@ -2333,14 +2333,23 @@
                         limit(100)
                     );
                     const snap = await getDocs(q);
+                    
+                    console.log(`[Teacher] Found ${snap.size} approved leaves`);
+                    
                     snap.forEach(d => {
-                        if (stats[d.data().type]) {
-                            stats[d.data().type].times++;
-                            stats[d.data().type].days += (d.data().days || 0);
+                        const data = d.data();
+                        console.log(`[Teacher] Leave: ${data.type}, days: ${data.days}, id: ${d.id}`);
+                        
+                        if (stats[data.type]) {
+                            stats[data.type].times++;
+                            stats[data.type].days += (data.days || 0);
                         }
                     });
+                    
+                    console.log('[Teacher] Final stats:', stats);
+                    
                 } catch (e) {
-                    console.error('Stats error:', e);
+                    console.error('[Teacher] Stats error:', e);
                 }
                 
                 // Build table
@@ -2354,12 +2363,17 @@
                 allTypes.forEach(type => {
                     const s = stats[type];
                     const isCurrent = (type === leave.type);
+                    
+                    // Calculate correctly
                     const timesBefore = isCurrent ? Math.max(0, s.times - 1) : s.times;
                     const daysBefore = isCurrent ? Math.max(0, s.days - leave.days) : s.days;
-                    const totalTimes = isCurrent ? s.times : s.times;
-                    const totalDays = isCurrent ? s.days : s.days;
+                    const totalTimes = s.times;
+                    const totalDays = s.days;
                     
-                    if (s.times > 0 || isCurrent) {
+                    console.log(`[Teacher] ${type}: before=${timesBefore}/${daysBefore}, current=${isCurrent ? '1/' + leave.days : '-'}, total=${totalTimes}/${totalDays}`);
+                    
+                    // Show only types with data
+                    if (s.times > 0) {
                         tableBody.push([
                             {text: type, fontSize: 9},
                             {text: `${timesBefore}/${daysBefore}`, fontSize: 9},
@@ -2410,7 +2424,7 @@
                 pdfMake.createPdf(docDefinition).download(`ใบลา_${leave.userName}_${formatThaiDate(approvedDate)}.pdf`);
 
             } catch (error) {
-                console.error('PDF Error (teacher):', error);
+                console.error('[Teacher] PDF Error:', error);
                 alert('เกิดข้อผิดพลาด: ' + error.message);
             }
         };
