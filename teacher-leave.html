@@ -1101,6 +1101,27 @@
         }
 
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script>
+        // Configure Thai font for pdfMake
+        if (typeof pdfMake !== 'undefined') {
+            pdfMake.fonts = {
+                THSarabunNew: {
+                    normal: 'https://cdn.jsdelivr.net/npm/@fontsource/sarabun@4.5.0/files/sarabun-thai-400-normal.woff',
+                    bold: 'https://cdn.jsdelivr.net/npm/@fontsource/sarabun@4.5.0/files/sarabun-thai-700-normal.woff',
+                    italics: 'https://cdn.jsdelivr.net/npm/@fontsource/sarabun@4.5.0/files/sarabun-thai-400-normal.woff',
+                    bolditalics: 'https://cdn.jsdelivr.net/npm/@fontsource/sarabun@4.5.0/files/sarabun-thai-700-normal.woff'
+                },
+                Roboto: {
+                    normal: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf',
+                    bold: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Medium.ttf',
+                    italics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Italic.ttf',
+                    bolditalics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-MediumItalic.ttf'
+                }
+            };
+        }
+    </script>
 </head>
 <body>
     <!-- Fiscal Year Notification Banner -->
@@ -1241,6 +1262,11 @@
                     <div class="form-group">
                         <label>เหตุผลการลา <span class="required">*</span></label>
                         <textarea id="reason" placeholder="โปรดระบุเหตุผลการลา..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>เบอร์โทรศัพท์ที่สามารถติดต่อได้ <span class="required">*</span></label>
+                        <input type="tel" id="contactPhone" placeholder="เช่น 081-234-5678" required pattern="[0-9-]+" maxlength="12">
                     </div>
 
                     <div class="form-actions">
@@ -1601,13 +1627,19 @@
             const end = new Date(endDate);
             const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
+            // Get user position
+            const userDoc = await getDoc(doc(db, 'users', currentUserId));
+            const userPosition = userDoc.exists() ? userDoc.data().position : 'ครู';
+
             const leaveData = {
                 userId: currentUserId,
                 userName: currentUserName,
+                userPosition: userPosition,
                 type: leaveType,
                 startDate: startDate,
                 endDate: endDate,
                 reason: document.getElementById('reason').value,
+                phone: document.getElementById('contactPhone').value,
                 status: 'รออนุมัติ',
                 days: days,
                 submittedDate: new Date().toISOString(),
@@ -2011,6 +2043,10 @@
                     });
 
                     const style = getLeaveTypeStyle(leave.type);
+                    
+                    // Add PDF button for approved leaves
+                    const pdfButton = leave.status === 'อนุมัติแล้ว' ? 
+                        `<button class="btn" style="background: #10b981; margin-top: 10px; font-size: 0.9rem;" onclick="generateMyLeavePDF('${leave.id}')">📄 เอกสาร PDF</button>` : '';
 
                     return `
                         <div class="history-item">
@@ -2025,6 +2061,7 @@
                                 <div><strong>วันที่:</strong> ${startDate} - ${endDate} (${leave.days} วัน)</div>
                                 <div><strong>เหตุผล:</strong> ${leave.reason}</div>
                                 ${leave.adminNote ? `<div style="color: var(--danger); margin-top: 8px;"><strong>หมายเหตุ:</strong> ${leave.adminNote}</div>` : ''}
+                                ${pdfButton}
                             </div>
                         </div>
                     `;
@@ -2249,10 +2286,135 @@
         };
 
         // ============================================
-        // CONTACT POPUP FUNCTIONS
+        // PDF GENERATION FUNCTIONS
         // ============================================
 
-        // Show contact popup
+        // Thai date formatting
+        function formatThaiDate(dateStr) {
+            const date = new Date(dateStr);
+            const thaiYear = date.getFullYear() + 543;
+            const months = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+                           'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+            return `${date.getDate()} ${months[date.getMonth() + 1]} ${thaiYear}`;
+        }
+
+        // Generate approved leave PDF for teacher - Simple Version
+
+        // Generate approved leave PDF for teacher
+        // Generate approved leave PDF for teacher - WITH TABLE
+        window.generateMyLeavePDF = async function(leaveId) {
+            try {
+                const leaveDoc = await getDoc(doc(db, 'leaves', leaveId));
+                if (!leaveDoc.exists()) {
+                    alert('ไม่พบข้อมูลการลา');
+                    return;
+                }
+
+                const leave = leaveDoc.data();
+                
+                if (leave.status !== 'อนุมัติแล้ว') {
+                    alert('สามารถดาวน์โหลดเอกสารได้เฉพาะการลาที่อนุมัติแล้วเท่านั้น');
+                    return;
+                }
+
+                const approvedDate = leave.approvedDate || leave.submittedDate;
+                
+                // Get ALL leave types statistics - OPTIMIZED with limit
+                const allTypes = ['ลาป่วย', 'ลาคลอดบุตร', 'ลาช่วยเหลือภริยาคลอดบุตร', 'ลากิจส่วนตัว', 'ลาพักผ่อน', 'ลาอุปสมบท', 'ลาศึกษา', 'ลาปฏิบัติงานองค์การระหว่างประเทศ', 'ลาฟื้นฟูสมรรถภาพ', 'ลาติดตามคู่สมรส', 'ลาปฏิบัติงานในหน่วยงานอื่น'];
+                
+                const stats = {};
+                allTypes.forEach(t => stats[t] = {times: 0, days: 0});
+                
+                try {
+                    const q = query(
+                        collection(db, 'leaves'), 
+                        where('userId', '==', currentUserId), 
+                        where('status', '==', 'อนุมัติแล้ว'),
+                        limit(100)
+                    );
+                    const snap = await getDocs(q);
+                    snap.forEach(d => {
+                        if (stats[d.data().type]) {
+                            stats[d.data().type].times++;
+                            stats[d.data().type].days += (d.data().days || 0);
+                        }
+                    });
+                } catch (e) {
+                    console.error('Stats error:', e);
+                }
+                
+                // Build table
+                const tableBody = [[
+                    {text: 'ประเภทการลา', bold: true, fontSize: 10},
+                    {text: 'ลามาแล้ว', bold: true, fontSize: 10},
+                    {text: 'ลาครั้งนี้', bold: true, fontSize: 10},
+                    {text: 'รวม', bold: true, fontSize: 10}
+                ]];
+                
+                allTypes.forEach(type => {
+                    const s = stats[type];
+                    const isCurrent = (type === leave.type);
+                    const timesBefore = isCurrent ? Math.max(0, s.times - 1) : s.times;
+                    const daysBefore = isCurrent ? Math.max(0, s.days - leave.days) : s.days;
+                    const totalTimes = isCurrent ? s.times : s.times;
+                    const totalDays = isCurrent ? s.days : s.days;
+                    
+                    if (s.times > 0 || isCurrent) {
+                        tableBody.push([
+                            {text: type, fontSize: 9},
+                            {text: `${timesBefore}/${daysBefore}`, fontSize: 9},
+                            {text: isCurrent ? `1/${leave.days}` : '-', fontSize: 9},
+                            {text: `${totalTimes}/${totalDays}`, fontSize: 9}
+                        ]);
+                    }
+                });
+                
+                const docDefinition = {
+                    pageSize: 'A4',
+                    pageMargins: [40, 40, 40, 40],
+                    defaultStyle: {font: 'THSarabunNew', fontSize: 12},
+                    content: [
+                        {text: 'ใบลา', alignment: 'center', fontSize: 16, bold: true, margin: [0,0,0,15]},
+                        {text: 'เขียนที่ โรงเรียนสหราษฎร์รังสฤษดิ์', alignment: 'right', fontSize: 12, margin: [0,0,0,3]},
+                        {text: `วันที่  ${formatThaiDate(leave.submittedDate)}`, alignment: 'right', fontSize: 12, margin: [0,0,0,15]},
+                        {text: `เรื่อง   ${leave.type}`, fontSize: 12, margin: [0,0,0,8]},
+                        {text: 'เรียน  ผู้อำนวยการโรงเรียนสหราษฎร์รังสฤษดิ์', fontSize: 12, margin: [0,0,0,10]},
+                        {text: [{text: '       ข้าพเจ้า ', fontSize: 12}, {text: leave.userName, bold: true, fontSize: 12}, {text: ' ตำแหน่ง ', fontSize: 12}, {text: leave.userPosition || 'ครู', bold: true, fontSize: 12}, {text: ' สังกัดสำนักงานคณะกรรมการการศึกษาขั้นพื้นฐาน', fontSize: 12}], margin: [0,0,0,8]},
+                        {text: [{text: 'ขอลา ', fontSize: 12}, {text: leave.type, bold: true, fontSize: 12}, {text: ' เนื่องจาก ', fontSize: 12}, {text: leave.reason, bold: true, fontSize: 12}], margin: [0,0,0,8]},
+                        {text: [{text: 'ตั้งแต่วันที่ ', fontSize: 12}, {text: formatThaiDate(leave.startDate), bold: true, fontSize: 12}, {text: ' ถึงวันที่ ', fontSize: 12}, {text: formatThaiDate(leave.endDate), bold: true, fontSize: 12}, {text: ' รวม ', fontSize: 12}, {text: `${leave.days}`, bold: true, fontSize: 12}, {text: ' วัน', fontSize: 12}], margin: [0,0,0,8]},
+                        {text: `ในระหว่างลาจะติดต่อกับข้าพเจ้าได้ที่ ${leave.phone || '-'}`, fontSize: 12, margin: [0,0,0,15]},
+                        {text: 'ขอแสดงความนับถือ', alignment: 'center', fontSize: 12, margin: [0,0,0,30]},
+                        {text: `(ลงชื่อ) ${leave.userName}`, alignment: 'center', fontSize: 12, margin: [0,0,0,3]},
+                        {text: `(${leave.userName})`, alignment: 'center', fontSize: 12, margin: [0,0,0,15]},
+                        {text: 'สถิติการลาในปีงบประมาณนี้', bold: true, fontSize: 11, margin: [0,0,0,5]},
+                        {table: {headerRows: 1, widths: ['*', 60, 60, 60], body: tableBody}, layout: {hLineWidth: () => 0.5, vLineWidth: () => 0.5}, margin: [0,0,0,15]},
+                        {text: '(ลงชื่อ) นางสาวเอื้ออารี เอกพันธ์  ผู้ตรวจสอบ', alignment: 'center', fontSize: 12, margin: [0,0,0,3]},
+                        {text: '(นางสาวเอื้ออารี เอกพันธ์)', alignment: 'center', fontSize: 12, margin: [0,0,0,3]},
+                        {text: 'ตำแหน่ง เจ้าหน้าที่กลุ่มบริหารงานบุคคล', alignment: 'center', fontSize: 12, margin: [0,0,0,3]},
+                        {text: `วันที่ ${formatThaiDate(approvedDate)}`, alignment: 'center', fontSize: 12, margin: [0,0,0,15]},
+                        {text: 'ความเห็นผู้บังคับบัญชา', fontSize: 12, margin: [0,0,0,3]},
+                        {text: 'อนุมัติ', bold: true, fontSize: 12, alignment: 'center', margin: [0,0,0,15]},
+                        {text: '(ลงชื่อ) นายอภิรักขภูมิ ยันตะบุศย์', alignment: 'center', fontSize: 12, margin: [0,0,0,3]},
+                        {text: '(นายอภิรักขภูมิ ยันตะบุศย์)', alignment: 'center', fontSize: 12, margin: [0,0,0,3]},
+                        {text: 'ตำแหน่ง รองผู้อำนวยการสถานศึกษา', alignment: 'center', fontSize: 12, margin: [0,0,0,3]},
+                        {text: `วันที่ ${formatThaiDate(approvedDate)}`, alignment: 'center', fontSize: 12, margin: [0,0,0,15]},
+                        {text: 'คำสั่ง', alignment: 'center', bold: true, fontSize: 12, margin: [0,0,0,8]},
+                        {text: 'อนุมัติให้ลาตามที่ขอ', alignment: 'center', fontSize: 12, margin: [0,0,0,15]},
+                        {text: '(ลงชื่อ) นายเทอดไทย  หอมสมบัติ', alignment: 'center', fontSize: 12, margin: [0,0,0,3]},
+                        {text: '(นายเทอดไทย  หอมสมบัติ)', alignment: 'center', fontSize: 12, margin: [0,0,0,3]},
+                        {text: 'ตำแหน่งผู้อำนวยการโรงเรียนสหราษฎร์รังสฤษดิ์', alignment: 'center', fontSize: 12, margin: [0,0,0,3]},
+                        {text: `วันที่ ${formatThaiDate(approvedDate)}`, alignment: 'center', fontSize: 12, margin: [0,0,0,0]}
+                    ]
+                };
+
+                pdfMake.createPdf(docDefinition).download(`ใบลา_${leave.userName}_${formatThaiDate(approvedDate)}.pdf`);
+
+            } catch (error) {
+                console.error('PDF Error (teacher):', error);
+                alert('เกิดข้อผิดพลาด: ' + error.message);
+            }
+        };
+
         window.showContactPopup = function() {
             const popup = document.getElementById('contactPopup');
             popup.classList.add('show');
@@ -2299,13 +2461,6 @@
                 // Only admin should perform the actual reset, but teacher can check
                 if (lastResetFY !== currentFY) {
                     console.log(`New fiscal year ${currentFY} detected. Waiting for admin to perform reset...`);
-                }
-                
-                // Reload leave balance to show updated data
-                const userDoc = await getDoc(doc(db, 'users', currentUserId));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    loadLeaveBalance(userData);
                 }
             } catch (error) {
                 console.error('Error checking fiscal year:', error);
