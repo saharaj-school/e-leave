@@ -1,0 +1,31 @@
+{
+  "name": "e-leave-management-system",
+  "version": "2.0.0",
+  "description": "ระบบการลาอิเล็กทรอนิกส์ สำหรับโรงเรียน - Production Ready",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server -p 8000",
+    "deploy": "firebase deploy --only hosting",
+    "build": "echo 'No build needed - Pure HTML/CSS/JS'",
+    "serve": "firebase serve"
+  },
+  "keywords": [
+    "leave-management",
+    "e-leave",
+    "school-management",
+    "thai",
+    "firebase"
+  ],
+  "author": "Claude AI Assistant",
+  "license": "MIT",
+  "devDependencies": {
+    "firebase-tools": "^13.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/e-leave-system.git"
+  }
+}

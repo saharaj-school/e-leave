@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการการลา - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin-dashboard.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script>
+        // Configure Thai font for pdfMake
+        if (typeof pdfMake !== 'undefined') {
+            pdfMake.fonts = {
+                THSarabunNew: {
+                    normal: 'https://cdn.jsdelivr.net/npm/@fontsource/sarabun@4.5.0/files/sarabun-thai-400-normal.woff',
+                    bold: 'https://cdn.jsdelivr.net/npm/@fontsource/sarabun@4.5.0/files/sarabun-thai-700-normal.woff',
+                    italics: 'https://cdn.jsdelivr.net/npm/@fontsource/sarabun@4.5.0/files/sarabun-thai-400-normal.woff',
+                    bolditalics: 'https://cdn.jsdelivr.net/npm/@fontsource/sarabun@4.5.0/files/sarabun-thai-700-normal.woff'
+                },
+                Roboto: {
+                    normal: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf',
+                    bold: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Medium.ttf',
+                    italics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Italic.ttf',
+                    bolditalics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-MediumItalic.ttf'
+                }
+            };
+        }
+    </script>
+</head>
+<body>
+    <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+
+    <!-- Fiscal Year Notification Banner -->
+    <div id="fiscalYearBanner" class="fiscal-year-banner" style="display: none;">
+        <div class="banner-content">
+            <div class="banner-icon" id="bannerIcon">⚠️</div>
+            <div class="banner-text">
+                <strong id="bannerTitle">การรีเซ็ตปีงบประมาณ</strong>
+                <p id="bannerMessage">ระบบจะรีเซ็ตวันลาอัตโนมัติในวันที่ 1 ตุลาคม</p>
+            </div>
+            <div class="banner-actions">
+                <button class="banner-btn" onclick="showFiscalYearSummary()">ดูสรุป</button>
+                <button class="banner-close" onclick="closeFiscalYearBanner()">×</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="logo">🎓 Admin Panel</div>
+        <nav>
+            <div class="nav-item active" onclick="switchTab('dashboard', this)">
+                <span class="nav-icon">📊</span>
+                <span>แดชบอร์ด</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('approvals', this)">
+                <span class="nav-icon">✅</span>
+                <span>อนุมัติการลา</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('official-trips', this)">
+                <span class="nav-icon">🚗</span>
+                <span>การแจ้งไปราชการ</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('late-arrivals', this)">
+                <span class="nav-icon">⏰</span>
+                <span>การแจ้งเข้าสาย</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('personnel', this)">
+                <span class="nav-icon">👥</span>
+                <span>จัดการบุคลากร</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('reports', this)">
+                <span class="nav-icon">📈</span>
+                <span>รายงานสรุป</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('settings', this)">
+                <span class="nav-icon">⚙️</span>
+                <span>ตั้งค่า</span>
+            </div>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="content-wrapper">
+            <div class="top-bar">
+                <h1 class="page-title" id="pageTitle">แดชบอร์ด</h1>
+                <div class="admin-info">
+                    <div class="admin-avatar">ผ</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 1.05rem;">ผู้อำนวยการ วิชาชีพ</div>
+                        <div style="font-size: 0.9rem; color: var(--text-light);">ผู้ดูแลระบบ</div>
+                    </div>
+                    <button onclick="logout()" style="margin-left: 15px; padding: 10px 20px; background: white; border: 2px solid var(--border); border-radius: 10px; color: var(--text); cursor: pointer; font-family: 'Kanit', sans-serif; font-weight: 600; transition: all 0.3s ease;">
+                        🚪 ออกจากระบบ
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="stats-overview">
+                <div class="stat-box">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">บุคลากรทั้งหมด</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon">📝</div>
+                    <div class="stat-number">0</div>
+                    <div class="stat-subnumber">0 วัน</div>
+                    <div class="stat-label">รออนุมัติ</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-number">0</div>
+                    <div class="stat-subnumber">0 วัน</div>
+                    <div class="stat-label">อนุมัติแล้ว (เดือนนี้)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">ลาวันนี้</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon">🚗</div>
+                    <div class="stat-number" id="dashboardTripCount">0</div>
+                    <div class="stat-subnumber" id="dashboardTripDays">0 วัน</div>
+                    <div class="stat-label">ไปราชการ (ปีงบปัจจุบัน)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon">⏰</div>
+                    <div class="stat-number" id="dashboardLateCount">0</div>
+                    <div class="stat-subnumber" id="dashboardLateMonth">0 เดือนนี้</div>
+                    <div class="stat-label">เข้าสาย (ปีงบปัจจุบัน)</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">🚨 คำขอที่รอดำเนินการ</h2>
+                </div>
+                <div class="table-container">
+                    <table id="pendingRequestsTable">
+                        <thead>
+                            <tr>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>ประเภท</th>
+                                <th>วันที่</th>
+                                <th>จำนวนวัน</th>
+                                <th>สถานะ</th>
+                                <th>การดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-light);">
+                                    <div style="border: 3px solid var(--border); border-top: 3px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px;"></div>
+                                    กำลังโหลดข้อมูล...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Daily Leave Report -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-header">
+                    <h2 class="card-title">📅 รายงานคนลาวันนี้</h2>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="date" id="dailyReportDate" style="width: auto; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.875rem;">
+                        <button class="btn btn-primary" onclick="loadDailyReport()" style="width: auto; padding: 8px 16px;">ดูข้อมูล</button>
+                    </div>
+                </div>
+                <div id="dailyReportContent">
+                    <div style="text-align: center; padding: 40px; color: var(--text-light);">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">📋</div>
+                        <div>เลือกวันที่เพื่อดูรายงานคนลา</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily Official Trip Report -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-header">
+                    <h2 class="card-title">🚗 รายงานคนไปราชการวันนี้</h2>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="date" id="dailyTripDate" style="width: auto; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.875rem;">
+                        <button class="btn btn-primary" onclick="loadDailyTrip()" style="width: auto; padding: 8px 16px;">ดูข้อมูล</button>
+                    </div>
+                </div>
+                <div id="dailyTripContent">
+                    <div style="text-align: center; padding: 40px; color: var(--text-light);">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">🚗</div>
+                        <div>เลือกวันที่เพื่อดูรายงานคนไปราชการ</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approvals Tab -->
+        <div id="approvals" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">✅ จัดการการอนุมัติ</h2>
+                </div>
+                
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <input type="text" placeholder="ค้นหาชื่อบุคลากร..." onkeyup="filterApprovals(this.value)">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                    <select onchange="filterByStatus(this.value)" style="width: auto; min-width: 180px;">
+                        <option value="all">สถานะทั้งหมด</option>
+                        <option value="pending">รออนุมัติ</option>
+                        <option value="approved">อนุมัติแล้ว</option>
+                        <option value="rejected">ไม่อนุมัติ</option>
+                    </select>
+                    <select onchange="filterByLeaveType(this.value)" style="width: auto; min-width: 200px;">
+                        <option value="all">ประเภททั้งหมด</option>
+                        <option value="ลาป่วย">ลาป่วย</option>
+                        <option value="ลาคลอดบุตร">ลาคลอดบุตร</option>
+                        <option value="ลาช่วยเหลือภริยาคลอดบุตร">ลาช่วยเหลือภริยาคลอดบุตร</option>
+                        <option value="ลากิจส่วนตัว">ลากิจส่วนตัว</option>
+                        <option value="ลาพักผ่อน">ลาพักผ่อน</option>
+                        <option value="ลาอุปสมบท">ลาอุปสมบท</option>
+                        <option value="ลาศึกษา">ลาศึกษา</option>
+                        <option value="ลาปฏิบัติงานองค์การระหว่างประเทศ">ลาปฏิบัติงานองค์การฯ</option>
+                        <option value="ลาฟื้นฟูสมรรถภาพ">ลาฟื้นฟูสมรรถภาพ</option>
+                        <option value="ลาติดตามคู่สมรส">ลาติดตามคู่สมรส</option>
+                        <option value="ลาปฏิบัติงานในหน่วยงานอื่น">ลาปฏิบัติงานในหน่วยงานอื่น</option>
+                    </select>
+                </div>
+
+                <div class="table-container">
+                    <table id="approvalsTable">
+                        <thead>
+                            <tr>
+                                <th>วันที่ยื่น</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>ประเภท</th>
+                                <th>วันที่ลา</th>
+                                <th>เหตุผล</th>
+                                <th>สถานะ</th>
+                                <th>การดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approvalsTableBody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Official Trips Tab -->
+        <div id="official-trips" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">🚗 การแจ้งไปราชการ</h2>
+                </div>
+
+                <!-- Trip Stats -->
+                <div class="stats-overview" style="margin-bottom: 25px;">
+                    <div class="stat-box">
+                        <div class="stat-icon">🚗</div>
+                        <div class="stat-number" id="adminTripTotal">0</div>
+                        <div class="stat-subnumber" id="adminTripTotalDays">0 วัน</div>
+                        <div class="stat-label">ทั้งหมด (ปีงบปัจจุบัน)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-number" id="adminTripMonth">0</div>
+                        <div class="stat-subnumber" id="adminTripMonthDays">0 วัน</div>
+                        <div class="stat-label">เดือนนี้</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-number" id="adminTripPeople">0</div>
+                        <div class="stat-label">บุคลากร</div>
+                    </div>
+                </div>
+
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <input type="text" placeholder="ค้นหาชื่อบุคลากร..." onkeyup="filterOfficialTrips(this.value)">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="officialTripsTable">
+                        <thead>
+                            <tr>
+                                <th>วันที่แจ้ง</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>เรื่อง</th>
+                                <th>วันที่ไปราชการ</th>
+                                <th>สถานที่</th>
+                                <th>วัตถุประสงค์</th>
+                                <th>สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="officialTripsTableBody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Late Arrivals Tab -->
+        <div id="late-arrivals" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">⏰ การแจ้งเข้าสาย</h2>
+                </div>
+
+                <!-- Late Arrival Stats -->
+                <div class="stats-overview" style="margin-bottom: 25px;">
+                    <div class="stat-box">
+                        <div class="stat-icon">⏰</div>
+                        <div class="stat-number" id="adminLateTotal">0</div>
+                        <div class="stat-label">ทั้งหมด (ปีงบปัจจุบัน)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-number" id="adminLateMonth">0</div>
+                        <div class="stat-label">เดือนนี้</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-number" id="adminLatePeople">0</div>
+                        <div class="stat-label">บุคลากร</div>
+                    </div>
+                </div>
+
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <input type="text" placeholder="ค้นหาชื่อบุคลากร..." onkeyup="filterLateArrivals(this.value)">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="lateArrivalsTable">
+                        <thead>
+                            <tr>
+                                <th>วันที่แจ้ง</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>วันที่</th>
+                                <th>เวลาเข้างาน</th>
+                                <th>เหตุผล</th>
+                                <th>สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lateArrivalsTableBody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personnel Tab -->
+        <div id="personnel" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">👥 จัดการบุคลากร</h2>
+                    <button class="btn btn-primary" onclick="openAddPersonnelModal()">
+                        <span>➕</span> เพิ่มบุคลากร
+                    </button>
+                </div>
+
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <input type="text" placeholder="ค้นหาชื่อบุคลากร..." onkeyup="filterPersonnel(this.value)">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                    <select style="width: auto; min-width: 200px;" onchange="filterByPosition(this.value)">
+                        <option value="all">ตำแหน่งทั้งหมด</option>
+                        <option value="ผู้บริหาร">ผู้บริหาร</option>
+                        <option value="ครู">ครู (ทุกระดับ)</option>
+                        <option value="พนักงานราชการ">พนักงานราชการ</option>
+                        <option value="ครูอัตราจ้าง">ครูอัตราจ้าง</option>
+                        <option value="ธุรการโรงเรียน">ธุรการโรงเรียน</option>
+                        <option value="แม่บ้าน/นักการภารโรง">แม่บ้าน/นักการภารโรง</option>
+                    </select>
+                </div>
+
+                <div class="table-container">
+                    <table id="personnelTable">
+                        <thead>
+                            <tr>
+                                <th>ลำดับ</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>ตำแหน่ง</th>
+                                <th>แผนก/กลุ่มสาระ</th>
+                                <th>การดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="personnelTableBody">
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-light);">
+                                    <div style="border: 3px solid var(--border); border-top: 3px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px;"></div>
+                                    กำลังโหลดข้อมูล...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="reports" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📈 รายงานสรุป</h2>
+                </div>
+
+                <!-- Stats Overview Cards -->
+                <div class="stats-overview" id="reportStats" style="margin-bottom: 25px;">
+                    <div class="stat-box">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-number" id="reportTotalLeaves">0</div>
+                        <div class="stat-label">ใบลาทั้งหมด</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">🏥</div>
+                        <div class="stat-number" id="reportSickLeaves">0</div>
+                        <div class="stat-label">ลาป่วย</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">📝</div>
+                        <div class="stat-number" id="reportPersonalLeaves">0</div>
+                        <div class="stat-label">ลากิจส่วนตัว</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">👶</div>
+                        <div class="stat-number" id="reportMaternityLeaves">0</div>
+                        <div class="stat-label">ลาคลอดบุตร</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">📂</div>
+                        <div class="stat-number" id="reportOtherLeaves">0</div>
+                        <div class="stat-label">ลาประเภทอื่นๆ</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <label>เลือกช่วงเวลา:</label>
+                    <div style="display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap;">
+                        <input type="date" id="reportStartDate" style="width: auto;">
+                        <span style="display: flex; align-items: center;">ถึง</span>
+                        <input type="date" id="reportEndDate" style="width: auto;">
+                        <button class="btn btn-primary" onclick="loadReportSummary()" style="background: #2563eb;">
+                            🔍 แสดงรายงาน
+                        </button>
+                        <button class="btn btn-success" onclick="exportToExcel()" style="background: #10b981;">
+                            📊 ส่งออก Excel
+                        </button>
+                        <button class="btn btn-primary" onclick="openCalendarView()" style="background: #8b5cf6;">
+                            📅 ปฏิทินการลา
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Report Summary Container -->
+                <div id="reportSummaryContainer">
+                    <div style="text-align: center; padding: 60px 20px; color: var(--text-light);">
+                        <div style="font-size: 3rem; margin-bottom: 15px;">📊</div>
+                        <div style="font-size: 1.1rem;">เลือกช่วงเวลาและกดปุ่ม "แสดงรายงาน"</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Individual Summary Report -->
+            <div class="card" style="margin-top: 25px;">
+                <div class="card-header">
+                    <h2 class="card-title">🚗⏰ รายงานการไปราชการและเข้าสาย (รายบุคคล)</h2>
+                </div>
+
+                <!-- Stats Overview -->
+                <div class="stats-overview" style="margin-bottom: 25px;">
+                    <div class="stat-box">
+                        <div class="stat-icon">🚗</div>
+                        <div class="stat-number" id="reportTotalTrips">0</div>
+                        <div class="stat-label">ไปราชการทั้งหมด (ครั้ง)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">⏰</div>
+                        <div class="stat-number" id="reportTotalLates">0</div>
+                        <div class="stat-label">เข้าสายทั้งหมด (ครั้ง)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-number" id="reportTotalPeople">0</div>
+                        <div class="stat-label">จำนวนบุคลากร</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <label>เลือกช่วงเวลา:</label>
+                    <div style="display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap; align-items: center;">
+                        <input type="date" id="individualStartDate" style="width: auto;">
+                        <span style="display: flex; align-items: center;">ถึง</span>
+                        <input type="date" id="individualEndDate" style="width: auto;">
+                        <button class="btn btn-primary" onclick="loadIndividualReport()" style="background: #2563eb;">
+                            🔍 แสดงรายงาน
+                        </button>
+                        <button class="btn btn-success" onclick="exportIndividualReport()" style="background: #10b981;">
+                            📊 ส่งออก Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Individual Report Container -->
+                <div id="individualReportContainer">
+                    <div style="text-align: center; padding: 60px 20px; color: var(--text-light);">
+                        <div style="font-size: 3rem; margin-bottom: 15px;">🚗⏰</div>
+                        <div style="font-size: 1.1rem;">เลือกช่วงเวลาและกดปุ่ม "แสดงรายงาน"</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">⚙️ ตั้งค่าจำนวนวันลาแต่ละประเภท</h2>
+                </div>
+
+                <div style="background: var(--bg); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: var(--text);">📋 ลาประเภทหลัก</h3>
+                    
+                    <div class="form-group">
+                        <label>🏥 จำนวนวันลาป่วยต่อปี</label>
+                        <input type="number" id="sickLeaveDays" value="30" min="0">
+                        <small style="color: var(--text-light); font-size: 0.85rem; display: block; margin-top: 5px;">
+                            ไม่จำกัดจำนวนวัน (ตามกฎหมาย แต่ตั้งค่าเพื่อเฝ้าติดตาม)
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>📝 จำนวนวันลากิจส่วนตัวต่อปี</label>
+                        <input type="number" id="personalLeaveDays" value="45" min="0">
+                        <small style="color: var(--text-light); font-size: 0.85rem; display: block; margin-top: 5px;">
+                            ไม่เกิน 45 วันต่อปี
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>🏖️ จำนวนวันลาพักผ่อนต่อปี</label>
+                        <input type="number" id="vacationLeaveDays" value="10" min="0">
+                        <small style="color: var(--text-light); font-size: 0.85rem; display: block; margin-top: 5px;">
+                            10 วันทำการต่อปี
+                        </small>
+                    </div>
+                </div>
+
+                <div style="background: var(--bg); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: var(--text);">👶 ลาเกี่ยวกับการมีบุตร</h3>
+                    
+                    <div class="form-group">
+                        <label>👶 จำนวนวันลาคลอดบุตร</label>
+                        <input type="number" id="maternityLeaveDays" value="90" min="0">
+                        <small style="color: var(--text-light); font-size: 0.85rem; display: block; margin-top: 5px;">
+                            90 วัน (สำหรับข้าราชการหญิง)
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>🤱 จำนวนวันลาช่วยเหลือภริยาที่คลอดบุตร</label>
+                        <input type="number" id="helpWifeLeaveDays" value="15" min="0">
+                        <small style="color: var(--text-light); font-size: 0.85rem; display: block; margin-top: 5px;">
+                            15 วัน (สำหรับข้าราชการชาย)
+                        </small>
+                    </div>
+                </div>
+
+                <div style="background: var(--bg); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: var(--text);">📚 ลาเพื่อพัฒนาและปฏิบัติงาน</h3>
+                    
+                    <div class="form-group">
+                        <label>📚 จำนวนวันลาศึกษา ฝึกอบรม</label>
+                        <input type="number" id="studyLeaveDays" value="365" min="0">
+                        <small style="color: var(--text-light); font-size: 0.85rem; display: block; margin-top: 5px;">
+                            ตามความเหมาะสม (โดยได้รับเงินเดือน)
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>💪 จำนวนวันลาฟื้นฟูสมรรถภาพด้านอาชีพ</label>
+                        <input type="number" id="rehabLeaveDays" value="180" min="0">
+                        <small style="color: var(--text-light); font-size: 0.85rem; display: block; margin-top: 5px;">
+                            ไม่เกิน 180 วันต่อครั้ง
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>🌏 จำนวนวันลาปฏิบัติงานในองค์การระหว่างประเทศ</label>
+                        <input type="number" id="internationalLeaveDays" value="730" min="0">
+                        <small style="color: var(--text-light); font-size: 0.85rem; display: block; margin-top: 5px;">
+                            ไม่เกิน 2 ปี (730 วัน)
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>🏛️ จำนวนวันลาปฏิบัติงานในหน่วยงานอื่น</label>
+                        <input type="number" id="workOtherLeaveDays" value="365" min="0">
+                        <small style="color: var(--text-light); font-size: 0.85rem; display: block; margin-top: 5px;">
+                            ตามที่ได้รับอนุมัติ
+                        </small>
+                    </div>
+                </div>
+
+                <div style="background: var(--bg); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: var(--text);">🙏 ลาเพื่อกิจกรรมพิเศษ</h3>
+                    
+                    <div class="form-group">
+                        <label>🙏 จำนวนวันลาอุปสมบท/ประกอบพิธีฮัจย์</label>
+                        <input type="number" id="ordinationLeaveDays" value="120" min="0">
+                        <small style="color: var(--text-light); font-size: 0.85rem; display: block; margin-top: 5px;">
+                            ไม่เกิน 120 วัน ตลอดราชการ
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>✈️ จำนวนวันลาติดตามคู่สมรส</label>
+                        <input type="number" id="followSpouseLeaveDays" value="365" min="0">
+                        <small style="color: var(--text-light); font-size: 0.85rem; display: block; margin-top: 5px;">
+                            ไม่เกินครั้งละ 1 ปี (ไม่เกิน 2 ครั้งตลอดราชการ)
+                        </small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📧 อีเมลแจ้งเตือน</label>
+                    <input type="email" id="notificationEmail" value="admin@school.ac.th">
+                </div>
+
+                <button class="btn btn-primary" onclick="saveSettings()">
+                    <span>💾</span> บันทึกการตั้งค่า
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Personnel Modal -->
+    <div id="addPersonnelModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-header">➕ เพิ่มบุคลากรใหม่</h2>
+            <form id="addPersonnelForm">
+                <div class="form-group">
+                    <label>ชื่อ-นามสกุล <span style="color: var(--danger);">*</span></label>
+                    <input type="text" name="name" required placeholder="ระบุชื่อ-นามสกุล">
+                </div>
+                <div class="form-group">
+                    <label>ตำแหน่ง <span style="color: var(--danger);">*</span></label>
+                    <select name="position" required>
+                        <option value="">เลือกตำแหน่ง</option>
+                        <option value="ผู้บริหาร">ผู้บริหาร</option>
+                        <option value="ครูผู้ช่วย">ครูผู้ช่วย</option>
+                        <option value="ครู">ครู</option>
+                        <option value="ครูชำนาญการ">ครูชำนาญการ</option>
+                        <option value="ครูชำนาญการพิเศษ">ครูชำนาญการพิเศษ</option>
+                        <option value="ครูเชี่ยวชาญ">ครูเชี่ยวชาญ</option>
+                        <option value="ครูเชี่ยวชาญพิเศษ">ครูเชี่ยวชาญพิเศษ</option>
+                        <option value="พนักงานราชการ">พนักงานราชการ</option>
+                        <option value="ครูอัตราจ้าง">ครูอัตราจ้าง</option>
+                        <option value="ธุรการโรงเรียน">ธุรการโรงเรียน</option>
+                        <option value="แม่บ้าน/นักการภารโรง">แม่บ้าน/นักการภารโรง</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>แผนก/กลุ่มสาระ <span style="color: var(--danger);">*</span></label>
+                    <select name="department" required>
+                        <option value="">เลือกกลุ่มสาระ</option>
+                        <option value="ภาษาไทย">ภาษาไทย</option>
+                        <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+                        <option value="วิทยาศาสตร์และเทคโนโลยี">วิทยาศาสตร์และเทคโนโลยี</option>
+                        <option value="สังคมศึกษา ศาสนาและวัฒนธรรม">สังคมศึกษา ศาสนาและวัฒนธรรม</option>
+                        <option value="สุขศึกษาและพลศึกษา">สุขศึกษาและพลศึกษา</option>
+                        <option value="ศิลปะ">ศิลปะ</option>
+                        <option value="การงานอาชีพ">การงานอาชีพ</option>
+                        <option value="ภาษาต่างประเทศ">ภาษาต่างประเทศ</option>
+                        <option value="กิจกรรมพัฒนาผู้เรียน">กิจกรรมพัฒนาผู้เรียน</option>
+                    </select>
+                </div>
+                
+                <div style="background: var(--bg); padding: 20px; border-radius: 12px; margin: 20px 0;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: var(--text);">🔐 ข้อมูลการเข้าสู่ระบบ</h3>
+                    
+                    <div class="form-group">
+                        <label>ชื่อผู้ใช้ (Username) <span style="color: var(--danger);">*</span></label>
+                        <input type="text" name="username" required placeholder="ตัวอักษรภาษาอังกฤษและตัวเลข" pattern="[a-zA-Z0-9_]+" title="ใช้ได้เฉพาะตัวอักษร a-z, A-Z, 0-9 และ _">
+                        <small style="color: var(--text-light); font-size: 0.85rem;">ตัวอย่าง: somchai123, teacher001</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>รหัสผ่าน (Password) <span style="color: var(--danger);">*</span></label>
+                        <input type="text" name="password" required placeholder="รหัสผ่านเริ่มต้น" minlength="6">
+                        <small style="color: var(--text-light); font-size: 0.85rem;">ต้องมีความยาวอย่างน้อย 6 ตัวอักษร</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>อีเมล</label>
+                    <input type="email" name="email" placeholder="example@school.ac.th">
+                </div>
+                <div class="form-group">
+                    <label>เบอร์โทรศัพท์</label>
+                    <input type="tel" name="phone" placeholder="081-234-5678">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddPersonnelModal()">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary">เพิ่มบุคลากร</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Personnel Modal -->
+    <div id="editPersonnelModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <h2 class="modal-header">✏️ แก้ไขข้อมูลบุคลากร</h2>
+            <form id="editPersonnelForm">
+                <input type="hidden" id="editPersonnelId">
+                
+                <div style="background: var(--bg); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: var(--text);">📝 ข้อมูลส่วนตัว</h3>
+                    
+                    <div class="form-group">
+                        <label>ชื่อ-นามสกุล <span style="color: var(--danger);">*</span></label>
+                        <input type="text" id="editName" required placeholder="ระบุชื่อ-นามสกุล">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>ตำแหน่ง <span style="color: var(--danger);">*</span></label>
+                        <select id="editPosition" required>
+                            <option value="">เลือกตำแหน่ง</option>
+                            <option value="ผู้บริหาร">ผู้บริหาร</option>
+                            <option value="ครูผู้ช่วย">ครูผู้ช่วย</option>
+                            <option value="ครู">ครู</option>
+                            <option value="ครูชำนาญการ">ครูชำนาญการ</option>
+                            <option value="ครูชำนาญการพิเศษ">ครูชำนาญการพิเศษ</option>
+                            <option value="ครูเชี่ยวชาญ">ครูเชี่ยวชาญ</option>
+                            <option value="ครูเชี่ยวชาญพิเศษ">ครูเชี่ยวชาญพิเศษ</option>
+                            <option value="พนักงานราชการ">พนักงานราชการ</option>
+                            <option value="ครูอัตราจ้าง">ครูอัตราจ้าง</option>
+                            <option value="ธุรการโรงเรียน">ธุรการโรงเรียน</option>
+                            <option value="แม่บ้าน/นักการภารโรง">แม่บ้าน/นักการภารโรง</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>แผนก/กลุ่มสาระ <span style="color: var(--danger);">*</span></label>
+                        <select id="editDepartment" required>
+                            <option value="">เลือกกลุ่มสาระ</option>
+                            <option value="ภาษาไทย">ภาษาไทย</option>
+                            <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+                            <option value="วิทยาศาสตร์และเทคโนโลยี">วิทยาศาสตร์และเทคโนโลยี</option>
+                            <option value="สังคมศึกษา ศาสนาและวัฒนธรรม">สังคมศึกษา ศาสนาและวัฒนธรรม</option>
+                            <option value="สุขศึกษาและพลศึกษา">สุขศึกษาและพลศึกษา</option>
+                            <option value="ศิลปะ">ศิลปะ</option>
+                            <option value="การงานอาชีพ">การงานอาชีพ</option>
+                            <option value="ภาษาต่างประเทศ">ภาษาต่างประเทศ</option>
+                            <option value="กิจกรรมพัฒนาผู้เรียน">กิจกรรมพัฒนาผู้เรียน</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="background: var(--bg); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: var(--text);">🔐 ข้อมูลการเข้าสู่ระบบ</h3>
+                    
+                    <div class="form-group">
+                        <label>ชื่อผู้ใช้ (Username) <span style="color: var(--danger);">*</span></label>
+                        <input type="text" id="editUsername" required placeholder="ชื่อผู้ใช้">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>รหัสผ่าน (Password)</label>
+                        <input type="text" id="editPassword" placeholder="เว้นว่างหากไม่ต้องการเปลี่ยน">
+                        <small style="color: var(--text-light); font-size: 0.85rem;">เว้นว่างไว้หากไม่ต้องการเปลี่ยนรหัสผ่าน</small>
+                    </div>
+                </div>
+
+                <div style="background: var(--bg); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: var(--text);">📊 จำนวนวันลา (แก้ไขได้ทั้งสองค่า)</h3>
+                    <p style="color: var(--text-light); font-size: 0.9rem; margin-bottom: 15px;">💡 <strong>หมายเหตุ:</strong> ค่า "ลาไปแล้ว" จะถูกคำนวณจากฐานข้อมูลอัตโนมัติเมื่อเปิดฟอร์ม แต่สามารถแก้ไขเพิ่มเติมได้ (เช่น เพิ่มข้อมูลก่อนใช้ระบบ)</p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <!-- ลาป่วย -->
+                        <div class="form-group">
+                            <label>🏥 ลาป่วย - ลาไปแล้ว (วัน)</label>
+                            <input type="number" id="editSickLeaveUsed" min="0" max="365" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>🏥 ลาป่วย - คงเหลือ (วัน)</label>
+                            <input type="number" id="editSickLeave" min="0" max="365" required value="30">
+                        </div>
+                        
+                        <!-- ลาคลอดบุตร -->
+                        <div class="form-group">
+                            <label>👶 ลาคลอดบุตร - ลาไปแล้ว (วัน)</label>
+                            <input type="number" id="editMaternityLeaveUsed" min="0" max="365" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>👶 ลาคลอดบุตร - คงเหลือ (วัน)</label>
+                            <input type="number" id="editMaternityLeave" min="0" max="365" required value="90">
+                        </div>
+                        
+                        <!-- ลาช่วยภริยา -->
+                        <div class="form-group">
+                            <label>🤱 ลาช่วยภริยา - ลาไปแล้ว (วัน)</label>
+                            <input type="number" id="editHelpWifeLeaveUsed" min="0" max="365" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>🤱 ลาช่วยภริยา - คงเหลือ (วัน)</label>
+                            <input type="number" id="editHelpWifeLeave" min="0" max="365" required value="15">
+                        </div>
+                        
+                        <!-- ลากิจส่วนตัว -->
+                        <div class="form-group">
+                            <label>📝 ลากิจส่วนตัว - ลาไปแล้ว (วัน)</label>
+                            <input type="number" id="editPersonalLeaveUsed" min="0" max="365" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>📝 ลากิจส่วนตัว - คงเหลือ (วัน)</label>
+                            <input type="number" id="editPersonalLeave" min="0" max="365" required value="45">
+                        </div>
+                        
+                        <!-- ลาพักผ่อน -->
+                        <div class="form-group">
+                            <label>🏖️ ลาพักผ่อน - ลาไปแล้ว (วัน)</label>
+                            <input type="number" id="editVacationLeaveUsed" min="0" max="365" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>🏖️ ลาพักผ่อน - คงเหลือ (วัน)</label>
+                            <input type="number" id="editVacationLeave" min="0" max="365" required value="10">
+                        </div>
+                        
+                        <!-- ลาอุปสมบท -->
+                        <div class="form-group">
+                            <label>🙏 ลาอุปสมบท - ลาไปแล้ว (วัน)</label>
+                            <input type="number" id="editOrdinationLeaveUsed" min="0" max="365" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>🙏 ลาอุปสมบท - คงเหลือ (วัน)</label>
+                            <input type="number" id="editOrdinationLeave" min="0" max="365" required value="120">
+                        </div>
+                        
+                        <!-- ลาศึกษา -->
+                        <div class="form-group">
+                            <label>📚 ลาศึกษา - ลาไปแล้ว (วัน)</label>
+                            <input type="number" id="editStudyLeaveUsed" min="0" max="730" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>📚 ลาศึกษา - คงเหลือ (วัน)</label>
+                            <input type="number" id="editStudyLeave" min="0" max="730" required value="365">
+                        </div>
+                        
+                        <!-- ลาองค์การระหว่างประเทศ -->
+                        <div class="form-group">
+                            <label>🌏 ลาองค์การฯ - ลาไปแล้ว (วัน)</label>
+                            <input type="number" id="editInternationalLeaveUsed" min="0" max="730" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>🌏 ลาองค์การฯ - คงเหลือ (วัน)</label>
+                            <input type="number" id="editInternationalLeave" min="0" max="730" required value="730">
+                        </div>
+                        
+                        <!-- ลาฟื้นฟูสมรรถภาพ -->
+                        <div class="form-group">
+                            <label>💪 ลาฟื้นฟูฯ - ลาไปแล้ว (วัน)</label>
+                            <input type="number" id="editRehabLeaveUsed" min="0" max="365" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>💪 ลาฟื้นฟูฯ - คงเหลือ (วัน)</label>
+                            <input type="number" id="editRehabLeave" min="0" max="365" required value="180">
+                        </div>
+                        
+                        <!-- ลาติดตามคู่สมรส -->
+                        <div class="form-group">
+                            <label>✈️ ลาติดตามคู่สมรส - ลาไปแล้ว (วัน)</label>
+                            <input type="number" id="editFollowSpouseLeaveUsed" min="0" max="730" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>✈️ ลาติดตามคู่สมรส - คงเหลือ (วัน)</label>
+                            <input type="number" id="editFollowSpouseLeave" min="0" max="730" required value="365">
+                        </div>
+                        
+                        <!-- ลาปฏิบัติงานในหน่วยงานอื่น -->
+                        <div class="form-group">
+                            <label>🏛️ ลาปฏิบัติงานฯ - ลาไปแล้ว (วัน)</label>
+                            <input type="number" id="editWorkOtherLeaveUsed" min="0" max="730" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>🏛️ ลาปฏิบัติงานฯ - คงเหลือ (วัน)</label>
+                            <input type="number" id="editWorkOtherLeave" min="0" max="730" required value="365">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>อีเมล</label>
+                    <input type="email" id="editEmail" placeholder="example@school.ac.th">
+                </div>
+                
+                <div class="form-group">
+                    <label>เบอร์โทรศัพท์</label>
+                    <input type="tel" id="editPhone" placeholder="081-234-5678">
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-danger" onclick="deletePersonnel()" style="margin-right: auto;">🗑️ ลบบุคลากร</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditPersonnelModal()">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary">บันทึก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </div>
+
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="js/admin-dashboard.js"></script>
+    <script>
+        // Function to open calendar view
+        function openCalendarView() {
+            window.open('calendar-view.html', '_blank');
+        }
+    </script>
+</body>
+</html>

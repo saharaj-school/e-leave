@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - ระบบการลาอิเล็กทรอนิกส์ โรงเรียนสหราษฎร์รังสฤษดิ์</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1e40af;
+            --primary-dark: #1e3a8a;
+            --primary-light: #3b82f6;
+            --secondary: #1e293b;
+            --accent: #0ea5e9;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --purple: #8b5cf6;
+            --bg: #f8fafc;
+            --bg-gradient-start: #dbeafe;
+            --bg-gradient-end: #e0e7ff;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --shadow: rgba(30, 64, 175, 0.1);
+        }
+
+        body {
+            font-family: 'Kanit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+            padding: 25px 40px;
+            box-shadow: 0 4px 20px rgba(30, 64, 175, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.1)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+            background-size: cover;
+            opacity: 0.3;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-container {
+            width: 85px;
+            height: 85px;
+            background: white;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .header-text {
+            flex: 1;
+        }
+
+        .header-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 6px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-subtitle {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 400;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            align-items: stretch;
+        }
+
+        .login-container {
+            order: 1;
+            max-width: 100%;
+        }
+
+        .leave-summary {
+            order: 2;
+            max-width: 100%;
+        }
+
+        /* Desktop Layout */
+        @media (min-width: 1025px) {
+            .main-container {
+                display: grid;
+                grid-template-columns: 1fr 450px;
+                align-items: start;
+            }
+
+            .login-container {
+                order: 0;
+                grid-column: 2;
+            }
+
+            .leave-summary {
+                order: 0;
+                grid-column: 1;
+                grid-row: 1;
+            }
+        }
+
+        /* Left Sidebar - Leave Summary */
+        .leave-summary {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 30px var(--shadow);
+            border: 1px solid rgba(30, 64, 175, 0.1);
+        }
+
+        .summary-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid var(--bg-gradient-start);
+        }
+
+        .summary-icon {
+            font-size: 2rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .summary-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:nth-child(1) {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        }
+
+        .stat-card:nth-child(1)::before {
+            background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        .stat-card:nth-child(2) {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        }
+
+        .stat-card:nth-child(2)::before {
+            background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .stat-card:nth-child(3) {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        }
+
+        .stat-card:nth-child(3)::before {
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        }
+
+        .stat-card:nth-child(4) {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+        }
+
+        .stat-card:nth-child(4)::before {
+            background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow);
+            border-color: var(--primary-light);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-card:nth-child(1) .stat-number {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-card:nth-child(2) .stat-number {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-card:nth-child(3) .stat-number {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-card:nth-child(4) .stat-number {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-sublabel {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-bottom: 6px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .today-section {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 3px solid var(--bg-gradient-start);
+        }
+
+        .today-section:first-of-type {
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
+        }
+
+        .today-header {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .today-header::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 2px;
+        }
+
+        .leave-item {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--warning);
+            transition: all 0.3s ease;
+        }
+
+        .leave-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);
+        }
+
+        .trip-item {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--accent);
+            transition: all 0.3s ease;
+        }
+
+        .trip-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.2);
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+
+        .item-detail {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .no-items {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .no-items-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .no-items-text {
+            font-size: 0.9rem;
+        }
+
+        /* Right Side - Login Form */
+        .login-container {
+            background: white;
+            padding: 45px;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px var(--shadow);
+            border: 1px solid rgba(30, 64, 175, 0.1);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .login-icon {
+            font-size: 3.5rem;
+            margin-bottom: 18px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .login-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-light);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--text);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Kanit', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Kanit', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            margin-top: 8px;
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 64, 175, 0.5);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: var(--danger);
+            padding: 14px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+            border-left: 4px solid var(--danger);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 24px 0;
+            color: var(--text-light);
+            font-size: 0.875rem;
+            position: relative;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 42%;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .divider::before { left: 0; }
+        .divider::after { right: 0; }
+
+        .admin-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .admin-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: color 0.2s ease;
+        }
+
+        .admin-link a:hover {
+            color: var(--primary-dark);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .spinner {
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 12px;
+            color: var(--text-light);
+            font-size: 0.875rem;
+        }
+
+        /* Footer */
+        .footer {
+            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+            color: white;
+            padding: 25px 40px;
+            text-align: center;
+            margin-top: 40px;
+            box-shadow: 0 -4px 20px rgba(30, 64, 175, 0.4);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 8px;
+        }
+
+        .footer-link {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .footer-link strong {
+            font-weight: 600;
+        }
+
+        .footer-credit {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+            .main-container {
+                padding: 0 20px;
+                gap: 25px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .header {
+                padding: 20px 20px;
+            }
+
+            .login-container,
+            .leave-summary {
+                padding: 30px 25px;
+            }
+
+            .logo-container {
+                width: 70px;
+                height: 70px;
+                font-size: 2.5rem;
+            }
+
+            .header-title {
+                font-size: 1.2rem;
+            }
+
+            .header-subtitle {
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                gap: 20px;
+                padding: 0 15px;
+                margin: 30px auto;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .footer {
+                padding: 15px 20px;
+                font-size: 0.75rem;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .login-container,
+            .leave-summary {
+                padding: 25px 20px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .login-container {
+                padding: 25px 20px;
+            }
+
+            .leave-summary {
+                padding: 20px 15px;
+            }
+
+            .header {
+                padding: 15px;
+            }
+
+            .header-content {
+                gap: 12px;
+            }
+
+            .logo-container {
+                width: 60px;
+                height: 60px;
+                font-size: 2rem;
+            }
+
+            .header-title {
+                font-size: 1rem;
+            }
+
+            .header-subtitle {
+                font-size: 0.75rem;
+            }
+
+            .main-container {
+                padding: 0 10px;
+                margin: 20px auto;
+            }
+
+            .stats-grid {
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 15px 10px;
+            }
+
+            .stat-number {
+                font-size: 1.75rem;
+            }
+
+            .stat-label {
+                font-size: 0.75rem;
+            }
+
+            .footer {
+                padding: 12px 15px;
+                font-size: 0.7rem;
+                margin-top: 30px;
+            }
+
+            .footer-links {
+                gap: 6px;
+            }
+
+            .login-icon {
+                font-size: 3rem;
+            }
+
+            .login-title {
+                font-size: 1.4rem;
+            }
+
+            .summary-title {
+                font-size: 1.1rem;
+            }
+
+            .summary-icon {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 390px) {
+            .header {
+                padding: 12px;
+            }
+
+            .logo-container {
+                width: 50px;
+                height: 50px;
+                font-size: 1.75rem;
+            }
+
+            .header-title {
+                font-size: 0.9rem;
+            }
+
+            .header-subtitle {
+                font-size: 0.7rem;
+            }
+
+            .login-container,
+            .leave-summary {
+                padding: 20px 15px;
+            }
+
+            .stat-number {
+                font-size: 1.5rem;
+            }
+
+            .item-name {
+                font-size: 0.85rem;
+            }
+
+            .item-detail {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="logo-container">
+                🏫
+            </div>
+            <div class="header-text">
+                <div class="header-title">ระบบการลาอิเล็กทรอนิกส์</div>
+                <div class="header-subtitle">โรงเรียนสหราษฎร์รังสฤษดิ์</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Left Side - Leave Summary -->
+        <div class="leave-summary">
+            <div class="summary-header">
+                <span class="summary-icon">📊</span>
+                <h2 class="summary-title">สรุปข้อมูลการลา</h2>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalPersonnel">0</div>
+                    <div class="stat-label">บุคลากรทั้งหมด</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="pendingLeaves">0</div>
+                    <div class="stat-sublabel" id="pendingDays">0 วัน</div>
+                    <div class="stat-label">รอการอนุมัติ</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="approvedThisMonth">0</div>
+                    <div class="stat-sublabel" id="approvedDays">0 วัน</div>
+                    <div class="stat-label">อนุมัติแล้ว (เดือนนี้)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="leavingToday">0</div>
+                    <div class="stat-label">ลาวันนี้</div>
+                </div>
+            </div>
+
+            <div class="today-section">
+                <div class="today-header">
+                    <span>📅</span>
+                    <span>บุคลากรที่ลาวันนี้</span>
+                </div>
+                <div id="todayLeavesList">
+                    <div class="no-items">
+                        <div class="no-items-icon">✅</div>
+                        <div class="no-items-text">ไม่มีบุคลากรลาในวันนี้</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="today-section">
+                <div class="today-header">
+                    <span>✈️</span>
+                    <span>บุคลากรที่ไปราชการวันนี้</span>
+                </div>
+                <div id="todayTripsList">
+                    <div class="no-items">
+                        <div class="no-items-icon">✅</div>
+                        <div class="no-items-text">ไม่มีบุคลากรไปราชการในวันนี้</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side - Login Form -->
+        <div class="login-container">
+            <div class="login-header">
+                <div class="login-icon">👤</div>
+                <h1 class="login-title">เข้าสู่ระบบ</h1>
+                <p class="login-subtitle">สำหรับบุคลากร</p>
+            </div>
+
+            <div id="errorMessage" class="error-message"></div>
+            
+            <div id="loadingDiv" class="loading">
+                <div class="spinner"></div>
+                <p class="loading-text">กำลังเข้าสู่ระบบ...</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>ชื่อผู้ใช้</label>
+                    <input type="text" id="username" placeholder="กรอกชื่อผู้ใช้" required autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label>รหัสผ่าน</label>
+                    <input type="password" id="password" placeholder="กรอกรหัสผ่าน" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn">เข้าสู่ระบบ</button>
+            </form>
+
+            <div class="divider">หรือ</div>
+
+            <div class="admin-link">
+                <a href="admin-login.html">เข้าสู่ระบบสำหรับผู้ดูแลระบบ →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <div class="footer-link">
+                    <span>📞</span>
+                    <span><strong>ติดต่อเจ้าหน้าที่การลา:</strong></span>
+                </div>
+                <div class="footer-link">
+                    <span>097-2342545 (ครูเอื้ออารี)</span>
+                </div>
+                <div class="footer-link">
+                    <span>092-5070358 (ครูวิภารัตน์)</span>
+                </div>
+            </div>
+            <div class="footer-credit">
+                <span>💻 พัฒนาระบบโดย ครูศิริศักดิ์ ปิลอง 093-3281575</span>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCFyb7qu110Nt2_MhRXK-AlSvu1Hhj2cJU",
+            authDomain: "e-leave-service.firebaseapp.com",
+            projectId: "e-leave-service",
+            storageBucket: "e-leave-service.firebasestorage.app",
+            messagingSenderId: "936880215366",
+            appId: "1:936880215366:web:dbd883b0ce4b03df4ec147",
+            measurementId: "G-N2Y7J3P6MP"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const analytics = getAnalytics(app);
+
+        // Get leave type icon
+        function getLeaveTypeIcon(type) {
+            const icons = {
+                'ลาป่วย': '🏥',
+                'ลาคลอดบุตร': '👶',
+                'ลาช่วยเหลือภริยาคลอดบุตร': '🤱',
+                'ลากิจส่วนตัว': '📝',
+                'ลาพักผ่อน': '🏖️',
+                'ลาอุปสมบท': '🙏',
+                'ลาศึกษา': '📚',
+                'ลาปฏิบัติงานองค์การระหว่างประเทศ': '🌏',
+                'ลาฟื้นฟูสมรรถภาพ': '💪',
+                'ลาติดตามคู่สมรส': '✈️',
+                'ลาปฏิบัติงานในหน่วยงานอื่น': '🏛️'
+            };
+            return icons[type] || '📋';
+        }
+
+        // Load dashboard stats
+        async function loadDashboardStats() {
+            try {
+                // Count total personnel
+                const usersSnapshot = await getDocs(collection(db, 'users'));
+                let totalPersonnel = 0;
+                usersSnapshot.forEach(docSnap => {
+                    const userData = docSnap.data();
+                    if (userData.role === 'teacher') {
+                        totalPersonnel++;
+                    }
+                });
+
+                // Count pending leaves
+                const pendingQuery = query(collection(db, 'leaves'), where('status', '==', 'รออนุมัติ'));
+                const pendingSnapshot = await getDocs(pendingQuery);
+                const pendingCount = pendingSnapshot.size;
+                
+                // Count pending days
+                let pendingDays = 0;
+                pendingSnapshot.forEach(docSnap => {
+                    const leave = docSnap.data();
+                    pendingDays += leave.days || 0;
+                });
+
+                // Count approved this month
+                const now = new Date();
+                const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                firstDayOfMonth.setHours(0, 0, 0, 0);
+                
+                let approvedCount = 0;
+                let approvedDays = 0;
+                const allLeavesSnapshot = await getDocs(collection(db, 'leaves'));
+                
+                allLeavesSnapshot.forEach(docSnap => {
+                    const leave = docSnap.data();
+                    if (leave.status === 'อนุมัติแล้ว' && leave.approvedDate) {
+                        const approvedDate = new Date(leave.approvedDate);
+                        if (approvedDate >= firstDayOfMonth) {
+                            approvedCount++;
+                            approvedDays += leave.days || 0;
+                        }
+                    }
+                });
+
+                // Count today's leaves
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+                const todayEnd = new Date();
+                todayEnd.setHours(23, 59, 59, 999);
+                
+                const todayLeaves = [];
+                allLeavesSnapshot.forEach(docSnap => {
+                    const leave = docSnap.data();
+                    if (leave.status === 'อนุมัติแล้ว') {
+                        const start = new Date(leave.startDate);
+                        const end = new Date(leave.endDate);
+                        start.setHours(0, 0, 0, 0);
+                        end.setHours(23, 59, 59, 999);
+                        if (start <= todayEnd && end >= todayStart) {
+                            todayLeaves.push({
+                                name: leave.userName,
+                                type: leave.type,
+                                days: leave.days
+                            });
+                        }
+                    }
+                });
+
+                // Count today's official trips
+                const todayTrips = [];
+                const tripsSnapshot = await getDocs(collection(db, 'official_trips'));
+                
+                tripsSnapshot.forEach(docSnap => {
+                    const trip = docSnap.data();
+                    
+                    // Check both old format (date) and new format (startDate/endDate)
+                    let isToday = false;
+                    
+                    if (trip.startDate && trip.endDate) {
+                        const start = new Date(trip.startDate);
+                        const end = new Date(trip.endDate);
+                        start.setHours(0, 0, 0, 0);
+                        end.setHours(23, 59, 59, 999);
+                        
+                        if (todayStart <= end && todayEnd >= start) {
+                            isToday = true;
+                        }
+                    } else if (trip.date) {
+                        const tripDate = new Date(trip.date);
+                        tripDate.setHours(0, 0, 0, 0);
+                        
+                        if (tripDate.getTime() === todayStart.getTime()) {
+                            isToday = true;
+                        }
+                    }
+                    
+                    if (isToday) {
+                        todayTrips.push({
+                            name: trip.userName,
+                            subject: trip.subject || 'ไปราชการ',
+                            location: trip.location
+                        });
+                    }
+                });
+
+                // Update stats
+                document.getElementById('totalPersonnel').textContent = totalPersonnel;
+                document.getElementById('pendingLeaves').textContent = pendingCount;
+                document.getElementById('pendingDays').textContent = `${pendingDays} วัน`;
+                document.getElementById('approvedThisMonth').textContent = approvedCount;
+                document.getElementById('approvedDays').textContent = `${approvedDays} วัน`;
+                document.getElementById('leavingToday').textContent = todayLeaves.length;
+
+                // Update today's leaves list
+                const todayLeavesList = document.getElementById('todayLeavesList');
+                if (todayLeaves.length === 0) {
+                    todayLeavesList.innerHTML = `
+                        <div class="no-items">
+                            <div class="no-items-icon">✅</div>
+                            <div class="no-items-text">ไม่มีบุคลากรลาในวันนี้</div>
+                        </div>
+                    `;
+                } else {
+                    todayLeavesList.innerHTML = todayLeaves.map(leave => `
+                        <div class="leave-item">
+                            <div class="item-name">${leave.name}</div>
+                            <div class="item-detail">
+                                <span>${getLeaveTypeIcon(leave.type)}</span>
+                                <span>${leave.type} (${leave.days} วัน)</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                // Update today's trips list
+                const todayTripsList = document.getElementById('todayTripsList');
+                if (todayTrips.length === 0) {
+                    todayTripsList.innerHTML = `
+                        <div class="no-items">
+                            <div class="no-items-icon">✅</div>
+                            <div class="no-items-text">ไม่มีบุคลากรไปราชการในวันนี้</div>
+                        </div>
+                    `;
+                } else {
+                    todayTripsList.innerHTML = todayTrips.map(trip => `
+                        <div class="trip-item">
+                            <div class="item-name">${trip.name}</div>
+                            <div class="item-detail">
+                                <span>📍</span>
+                                <span>${trip.subject} - ${trip.location}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load stats on page load
+        loadDashboardStats();
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 5000);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingDiv').style.display = show ? 'block' : 'none';
+            document.getElementById('loginForm').style.display = show ? 'none' : 'block';
+        }
+
+        const currentUser = sessionStorage.getItem('currentUser');
+        if (currentUser) {
+            window.location.href = 'teacher-leave.html';
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                showError('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const q = query(
+                    collection(db, 'users'),
+                    where('username', '==', username),
+                    where('role', '==', 'teacher')
+                );
+                
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    showLoading(false);
+                    showError('ไม่พบชื่อผู้ใช้นี้ในระบบ');
+                    return;
+                }
+
+                let userFound = false;
+                let userData = null;
+
+                querySnapshot.forEach((doc) => {
+                    const user = doc.data();
+                    if (user.password === password) {
+                        userFound = true;
+                        userData = { id: doc.id, ...user };
+                    }
+                });
+
+                if (userFound) {
+                    sessionStorage.setItem('currentUser', JSON.stringify(userData));
+                    window.location.href = 'teacher-leave.html';
+                } else {
+                    showLoading(false);
+                    showError('รหัสผ่านไม่ถูกต้อง');
+                }
+
+            } catch (error) {
+                console.error('Login error:', error);
+                showLoading(false);
+                showError('เกิดข้อผิดพลาด: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

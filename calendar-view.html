@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ปฏิทินการลา - Leave Calendar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Kanit', sans-serif;
+            background: var(--bg);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .filter-section {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        select, input {
+            padding: 10px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-family: 'Kanit', sans-serif;
+            font-size: 0.9rem;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        select:hover, input:hover {
+            border-color: var(--primary);
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Kanit', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: var(--bg);
+            border-radius: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        #calendar {
+            margin-top: 20px;
+        }
+
+        /* FullCalendar Thai Font */
+        .fc {
+            font-family: 'Kanit', sans-serif !important;
+        }
+
+        .fc-toolbar-title {
+            font-size: 1.4rem !important;
+            font-weight: 600 !important;
+        }
+
+        .fc-button {
+            font-family: 'Kanit', sans-serif !important;
+        }
+
+        .fc-event {
+            cursor: pointer;
+        }
+
+        /* Event Detail Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-body {
+            font-size: 0.95rem;
+        }
+
+        .detail-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: var(--text-light);
+            min-width: 120px;
+        }
+
+        .detail-value {
+            color: var(--text);
+        }
+
+        .modal-close {
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .filter-section {
+                width: 100%;
+            }
+
+            select, input {
+                width: 100%;
+            }
+
+            .legend {
+                flex-direction: column;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">
+                📅 ปฏิทินการลา
+            </div>
+            <div class="filter-section">
+                <select id="filterType">
+                    <option value="all">ทุกประเภท</option>
+                    <option value="ลาป่วย">ลาป่วย</option>
+                    <option value="ลากิจส่วนตัว">ลากิจส่วนตัว</option>
+                    <option value="ลาพักผ่อน">ลาพักผ่อน</option>
+                    <option value="ลาคลอดบุตร">ลาคลอดบุตร</option>
+                </select>
+                <select id="filterTeacher">
+                    <option value="all">ทุกคน</option>
+                </select>
+                <button class="btn" onclick="exportCalendar()">📥 Export</button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalEvents">0</div>
+                <div class="stat-label">การลาทั้งหมด</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="thisMonthEvents">0</div>
+                <div class="stat-label">เดือนนี้</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="todayEvents">0</div>
+                <div class="stat-label">วันนี้</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="upcomingEvents">0</div>
+                <div class="stat-label">ที่กำลังจะมาถึง</div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ef4444;"></div>
+                <span>ลาป่วย</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #3b82f6;"></div>
+                <span>ลากิจส่วนตัว</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #10b981;"></div>
+                <span>ลาพักผ่อน</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ec4899;"></div>
+                <span>ลาคลอดบุตร</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #f59e0b;"></div>
+                <span>อื่นๆ</span>
+            </div>
+        </div>
+
+        <div id="calendar"></div>
+    </div>
+
+    <!-- Event Detail Modal -->
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="modalIcon"></span>
+                <span id="modalTitle"></span>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <button class="btn modal-close" onclick="closeModal()">ปิด</button>
+        </div>
+    </div>
+
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCFyb7qu110Nt2_MhRXK-AlSvu1Hhj2cJU",
+            authDomain: "e-leave-service.firebaseapp.com",
+            projectId: "e-leave-service",
+            storageBucket: "e-leave-service.firebasestorage.app",
+            messagingSenderId: "936880215366",
+            appId: "1:936880215366:web:dbd883b0ce4b03df4ec147",
+            measurementId: "G-N2Y7J3P6MP"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let calendar;
+        let allEvents = [];
+
+        // สีสำหรับแต่ละประเภท
+        const leaveColors = {
+            'ลาป่วย': '#ef4444',
+            'ลาคลอดบุตร': '#ec4899',
+            'ลาช่วยเหลือภริยาคลอดบุตร': '#f59e0b',
+            'ลากิจส่วนตัว': '#3b82f6',
+            'ลาพักผ่อน': '#10b981',
+            'ลาอุปสมบท': '#06b6d4',
+            'ลาศึกษา': '#8b5cf6',
+            'ลาปฏิบัติงานองค์การระหว่างประเทศ': '#14b8a6',
+            'ลาฟื้นฟูสมรรถภาพ': '#f97316',
+            'ลาติดตามคู่สมรส': '#6366f1',
+            'ลาปฏิบัติงานในหน่วยงานอื่น': '#64748b'
+        };
+
+        // โหลดข้อมูลการลา
+        async function loadLeaveData() {
+            try {
+                const leavesSnapshot = await getDocs(
+                    query(collection(db, 'leaves'), where('status', '==', 'อนุมัติแล้ว'))
+                );
+
+                const events = [];
+                leavesSnapshot.forEach(doc => {
+                    const leave = doc.data();
+                    events.push({
+                        id: doc.id,
+                        title: `${leave.userName} - ${leave.type}`,
+                        start: leave.startDate,
+                        end: new Date(new Date(leave.endDate).getTime() + 86400000).toISOString().split('T')[0], // +1 day for inclusive end
+                        backgroundColor: leaveColors[leave.type] || '#64748b',
+                        borderColor: leaveColors[leave.type] || '#64748b',
+                        extendedProps: {
+                            userName: leave.userName,
+                            leaveType: leave.type,
+                            days: leave.days,
+                            reason: leave.reason,
+                            approvedBy: leave.approvedBy || 'ไม่ระบุ',
+                            approvedDate: leave.approvedDate
+                        }
+                    });
+                });
+
+                allEvents = events;
+                updateCalendar(events);
+                updateStats(events);
+                loadTeacherFilter();
+            } catch (error) {
+                console.error('Error loading leaves:', error);
+            }
+        }
+
+        // โหลด dropdown ครู
+        async function loadTeacherFilter() {
+            try {
+                const usersSnapshot = await getDocs(
+                    query(collection(db, 'users'), where('role', '==', 'teacher'))
+                );
+
+                const filterSelect = document.getElementById('filterTeacher');
+                usersSnapshot.forEach(doc => {
+                    const user = doc.data();
+                    const option = document.createElement('option');
+                    option.value = user.name;
+                    option.textContent = user.name;
+                    filterSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading teachers:', error);
+            }
+        }
+
+        // อัปเดต calendar
+        function updateCalendar(events) {
+            if (calendar) {
+                calendar.removeAllEvents();
+                calendar.addEventSource(events);
+            }
+        }
+
+        // อัปเดตสถิติ
+        function updateStats(events) {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+            const totalEvents = events.length;
+            const thisMonthEvents = events.filter(e => {
+                const start = new Date(e.start);
+                return start >= firstDayOfMonth;
+            }).length;
+            const todayEvents = events.filter(e => {
+                const start = new Date(e.start);
+                const end = new Date(e.end);
+                return start <= today && end >= today;
+            }).length;
+            const upcomingEvents = events.filter(e => {
+                const start = new Date(e.start);
+                return start > today;
+            }).length;
+
+            document.getElementById('totalEvents').textContent = totalEvents;
+            document.getElementById('thisMonthEvents').textContent = thisMonthEvents;
+            document.getElementById('todayEvents').textContent = todayEvents;
+            document.getElementById('upcomingEvents').textContent = upcomingEvents;
+        }
+
+        // Initialize calendar
+        document.addEventListener('DOMContentLoaded', function() {
+            const calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'th',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,listMonth'
+                },
+                buttonText: {
+                    today: 'วันนี้',
+                    month: 'เดือน',
+                    week: 'สัปดาห์',
+                    list: 'รายการ'
+                },
+                eventClick: function(info) {
+                    showEventDetails(info.event);
+                },
+                height: 'auto'
+            });
+
+            calendar.render();
+            loadLeaveData();
+        });
+
+        // แสดงรายละเอียด event
+        function showEventDetails(event) {
+            const props = event.extendedProps;
+            
+            document.getElementById('modalIcon').textContent = getLeaveIcon(props.leaveType);
+            document.getElementById('modalTitle').textContent = props.leaveType;
+            
+            document.getElementById('modalBody').innerHTML = `
+                <div class="detail-row">
+                    <div class="detail-label">👤 ชื่อ:</div>
+                    <div class="detail-value">${props.userName}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">📅 วันที่:</div>
+                    <div class="detail-value">${formatDate(event.start)} - ${formatDate(new Date(event.end.getTime() - 86400000))}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">⏰ จำนวนวัน:</div>
+                    <div class="detail-value">${props.days} วัน</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">📝 เหตุผล:</div>
+                    <div class="detail-value">${props.reason}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">👨‍💼 อนุมัติโดย:</div>
+                    <div class="detail-value">${props.approvedBy}</div>
+                </div>
+                ${props.approvedDate ? `
+                <div class="detail-row">
+                    <div class="detail-label">📅 วันที่อนุมัติ:</div>
+                    <div class="detail-value">${formatDate(new Date(props.approvedDate))}</div>
+                </div>
+                ` : ''}
+            `;
+
+            document.getElementById('eventModal').classList.add('active');
+        }
+
+        window.closeModal = function() {
+            document.getElementById('eventModal').classList.remove('active');
+        };
+
+        // Filter events
+        document.getElementById('filterType').addEventListener('change', filterEvents);
+        document.getElementById('filterTeacher').addEventListener('change', filterEvents);
+
+        function filterEvents() {
+            const typeFilter = document.getElementById('filterType').value;
+            const teacherFilter = document.getElementById('filterTeacher').value;
+
+            let filtered = allEvents;
+
+            if (typeFilter !== 'all') {
+                filtered = filtered.filter(e => e.extendedProps.leaveType === typeFilter);
+            }
+
+            if (teacherFilter !== 'all') {
+                filtered = filtered.filter(e => e.extendedProps.userName === teacherFilter);
+            }
+
+            updateCalendar(filtered);
+            updateStats(filtered);
+        }
+
+        // Export calendar
+        window.exportCalendar = function() {
+            const events = calendar.getEvents();
+            const icsContent = generateICS(events);
+            downloadFile(icsContent, 'leave-calendar.ics', 'text/calendar');
+        };
+
+        function generateICS(events) {
+            let ics = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Leave Calendar//TH\n';
+            
+            events.forEach(event => {
+                const start = event.start.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                const end = event.end.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                
+                ics += 'BEGIN:VEVENT\n';
+                ics += `DTSTART:${start}\n`;
+                ics += `DTEND:${end}\n`;
+                ics += `SUMMARY:${event.title}\n`;
+                ics += `DESCRIPTION:${event.extendedProps.reason}\n`;
+                ics += 'END:VEVENT\n';
+            });
+            
+            ics += 'END:VCALENDAR';
+            return ics;
+        }
+
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Helper functions
+        function getLeaveIcon(type) {
+            const icons = {
+                'ลาป่วย': '🏥',
+                'ลาคลอดบุตร': '👶',
+                'ลาช่วยเหลือภริยาคลอดบุตร': '🤱',
+                'ลากิจส่วนตัว': '📝',
+                'ลาพักผ่อน': '🏖️',
+                'ลาอุปสมบท': '🙏',
+                'ลาศึกษา': '📚',
+                'ลาปฏิบัติงานองค์การระหว่างประเทศ': '🌏',
+                'ลาฟื้นฟูสมรรถภาพ': '💪',
+                'ลาติดตามคู่สมรส': '✈️',
+                'ลาปฏิบัติงานในหน่วยงานอื่น': '🏛️'
+            };
+            return icons[type] || '📋';
+        }
+
+        function formatDate(date) {
+            return new Date(date).toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+    </script>
+</body>
+</html>
