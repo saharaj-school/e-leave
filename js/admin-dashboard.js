@@ -227,6 +227,113 @@
             }
         };
 
+        // Cancel leave
+        window.cancelLeave = async function(button) {
+            if (!confirm('ยืนยันการยกเลิกใบลานี้?\n\nวันลาจะถูกคืนให้กับผู้ใช้')) return;
+
+            const row = button.closest('tr');
+            const leaveId = row.dataset.leaveId;
+
+            try {
+                const leaveRef = doc(db, 'leaves', leaveId);
+                const leaveDoc = await getDoc(leaveRef);
+                const leaveData = leaveDoc.data();
+
+                // Return leave days to user
+                await updateUserLeaveBalance(leaveData.userId, leaveData.type, leaveData.days);
+
+                // Delete the leave request
+                await deleteDoc(leaveRef);
+
+                alert('✅ ยกเลิกใบลาเรียบร้อยแล้ว');
+                updateDashboardStats();
+                loadApprovalsData();
+            } catch (error) {
+                console.error('Error canceling leave:', error);
+                alert('❌ เกิดข้อผิดพลาด: ' + error.message);
+            }
+        };
+
+        // Edit leave - open modal
+        window.editLeave = async function(button) {
+            const row = button.closest('tr');
+            const leaveId = row.dataset.leaveId;
+
+            try {
+                const leaveRef = doc(db, 'leaves', leaveId);
+                const leaveDoc = await getDoc(leaveRef);
+                const leaveData = leaveDoc.data();
+
+                // Populate edit modal
+                document.getElementById('editLeaveId').value = leaveId;
+                document.getElementById('editLeaveType').value = leaveData.type;
+                document.getElementById('editStartDate').value = leaveData.startDate;
+                document.getElementById('editEndDate').value = leaveData.endDate;
+                document.getElementById('editReason').value = leaveData.reason;
+
+                // Show modal
+                document.getElementById('editLeaveModal').style.display = 'flex';
+            } catch (error) {
+                console.error('Error loading leave data:', error);
+                alert('❌ เกิดข้อผิดพลาด: ' + error.message);
+            }
+        };
+
+        // Close edit leave modal
+        window.closeEditLeaveModal = function() {
+            document.getElementById('editLeaveModal').style.display = 'none';
+        };
+
+        // Save edited leave
+        window.saveEditedLeave = async function(event) {
+            event.preventDefault();
+
+            const leaveId = document.getElementById('editLeaveId').value;
+            const type = document.getElementById('editLeaveType').value;
+            const startDate = document.getElementById('editStartDate').value;
+            const endDate = document.getElementById('editEndDate').value;
+            const reason = document.getElementById('editReason').value;
+
+            try {
+                const leaveRef = doc(db, 'leaves', leaveId);
+                const leaveDoc = await getDoc(leaveRef);
+                const oldLeaveData = leaveDoc.data();
+
+                // Calculate new days
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                let days = 0;
+                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                    const dayOfWeek = d.getDay();
+                    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                        days++;
+                    }
+                }
+
+                // Return old days and deduct new days
+                await updateUserLeaveBalance(oldLeaveData.userId, oldLeaveData.type, oldLeaveData.days);
+                await updateUserLeaveBalance(oldLeaveData.userId, type, -days);
+
+                // Update leave request
+                await updateDoc(leaveRef, {
+                    type: type,
+                    startDate: startDate,
+                    endDate: endDate,
+                    reason: reason,
+                    days: days,
+                    updatedAt: new Date().toISOString()
+                });
+
+                alert('✅ แก้ไขใบลาเรียบร้อยแล้ว');
+                closeEditLeaveModal();
+                updateDashboardStats();
+                loadApprovalsData();
+            } catch (error) {
+                console.error('Error updating leave:', error);
+                alert('❌ เกิดข้อผิดพลาด: ' + error.message);
+            }
+        };
+
         // Update dashboard statistics - FIXED
         async function updateDashboardStats() {
             try {
@@ -668,6 +775,8 @@
                     `<div class="action-buttons">
                         <button class="btn btn-success" onclick="approveLeave(this)">✓ อนุมัติ</button>
                         <button class="btn btn-danger" onclick="rejectLeave(this)">✗ ไม่อนุมัติ</button>
+                        <button class="btn" style="background: #f59e0b;" onclick="editLeave(this)">✏️ แก้ไข</button>
+                        <button class="btn" style="background: #ef4444;" onclick="cancelLeave(this)">🗑️ ยกเลิก</button>
                         <button class="btn" style="background: #6366f1;" onclick="generateLeaveForm1('${leave.id}')">📄 เอกสาร PDF</button>
                     </div>` : 
                     leave.status === 'อนุมัติแล้ว' ?
