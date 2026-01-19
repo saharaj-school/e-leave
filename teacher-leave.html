@@ -1206,78 +1206,78 @@
         <div class="content-wrapper">
             <!-- Dashboard Section -->
             <div class="content-section active" id="dashboard-section">
-            <div class="page-header">
-                <h1 class="page-title">📊 สรุปภาพรวม</h1>
-                <p class="page-subtitle">สถิติการลาและข้อมูลทั่วไป</p>
-            </div>
+                <div class="page-header">
+                    <h1 class="page-title">📊 สรุปภาพรวม</h1>
+                    <p class="page-subtitle">สถิติการลาและข้อมูลทั่วไป</p>
+                </div>
 
-            <div class="stats-grid" id="leaveStatsGrid">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <div style="margin-top: 15px;">กำลังโหลดข้อมูล...</div>
+                <div class="stats-grid" id="leaveStatsGrid">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <div style="margin-top: 15px;">กำลังโหลดข้อมูล...</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Leave Section -->
-        <div class="content-section" id="leave-section">
-            <div class="page-header">
-                <h1 class="page-title">📝 ยื่นใบลา</h1>
-                <p class="page-subtitle">กรอกข้อมูลเพื่อยื่นใบลา</p>
+            <!-- Leave Section -->
+            <div class="content-section" id="leave-section">
+                <div class="page-header">
+                    <h1 class="page-title">📝 ยื่นใบลา</h1>
+                    <p class="page-subtitle">กรอกข้อมูลเพื่อยื่นใบลา</p>
+                </div>
+
+                <div class="alert alert-warning" id="leaveAlert" style="display: none;"></div>
+
+                <div class="card">
+                    <form id="leaveForm">
+                        <div class="form-group">
+                            <label>ประเภทการลา <span class="required">*</span></label>
+                            <select id="leaveType" required onchange="handleLeaveTypeChange()">
+                                <option value="">เลือกประเภทการลา</option>
+                                <option value="ลาป่วย">ลาป่วย</option>
+                                <option value="ลาคลอดบุตร">ลาคลอดบุตร</option>
+                                <option value="ลาช่วยเหลือภริยาคลอดบุตร">ลาช่วยเหลือภริยาคลอดบุตร</option>
+                                <option value="ลากิจส่วนตัว">ลากิจส่วนตัว</option>
+                                <option value="ลาพักผ่อน">ลาพักผ่อน</option>
+                                <option value="ลาอุปสมบท">ลาอุปสมบท</option>
+                                <option value="ลาศึกษา">ลาศึกษา</option>
+                                <option value="ลาปฏิบัติงานองค์การระหว่างประเทศ">ลาปฏิบัติงานองค์การระหว่างประเทศ</option>
+                                <option value="ลาฟื้นฟูสมรรถภาพ">ลาฟื้นฟูสมรรถภาพ</option>
+                                <option value="ลาติดตามคู่สมรส">ลาติดตามคู่สมรส</option>
+                                <option value="ลาปฏิบัติงานในหน่วยงานอื่น">ลาปฏิบัติงานในหน่วยงานอื่น</option>
+                            </select>
+                        </div>
+
+                        <div class="date-range">
+                            <div class="form-group">
+                                <label>วันที่เริ่มต้น <span class="required">*</span></label>
+                                <input type="date" id="startDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label>วันที่สิ้นสุด <span class="required">*</span></label>
+                                <input type="date" id="endDate" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>เหตุผลการลา <span class="required">*</span></label>
+                            <textarea id="reason" placeholder="โปรดระบุเหตุผลการลา..." required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>เบอร์โทรศัพท์ที่สามารถติดต่อได้ <span class="required">*</span></label>
+                            <input type="tel" id="contactPhone" placeholder="เช่น 081-234-5678" required pattern="[0-9-]+" maxlength="12">
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="resetLeaveForm()">ล้างข้อมูล</button>
+                            <button type="submit" class="btn btn-primary">ส่งใบลา</button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
-            <div class="alert alert-warning" id="leaveAlert" style="display: none;"></div>
-
-            <div class="card">
-                <form id="leaveForm">
-                    <div class="form-group">
-                        <label>ประเภทการลา <span class="required">*</span></label>
-                        <select id="leaveType" required onchange="handleLeaveTypeChange()">
-                            <option value="">เลือกประเภทการลา</option>
-                            <option value="ลาป่วย">ลาป่วย</option>
-                            <option value="ลาคลอดบุตร">ลาคลอดบุตร</option>
-                            <option value="ลาช่วยเหลือภริยาคลอดบุตร">ลาช่วยเหลือภริยาคลอดบุตร</option>
-                            <option value="ลากิจส่วนตัว">ลากิจส่วนตัว</option>
-                            <option value="ลาพักผ่อน">ลาพักผ่อน</option>
-                            <option value="ลาอุปสมบท">ลาอุปสมบท</option>
-                            <option value="ลาศึกษา">ลาศึกษา</option>
-                            <option value="ลาปฏิบัติงานองค์การระหว่างประเทศ">ลาปฏิบัติงานองค์การระหว่างประเทศ</option>
-                            <option value="ลาฟื้นฟูสมรรถภาพ">ลาฟื้นฟูสมรรถภาพ</option>
-                            <option value="ลาติดตามคู่สมรส">ลาติดตามคู่สมรส</option>
-                            <option value="ลาปฏิบัติงานในหน่วยงานอื่น">ลาปฏิบัติงานในหน่วยงานอื่น</option>
-                        </select>
-                    </div>
-
-                    <div class="date-range">
-                        <div class="form-group">
-                            <label>วันที่เริ่มต้น <span class="required">*</span></label>
-                            <input type="date" id="startDate" required>
-                        </div>
-                        <div class="form-group">
-                            <label>วันที่สิ้นสุด <span class="required">*</span></label>
-                            <input type="date" id="endDate" required>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>เหตุผลการลา <span class="required">*</span></label>
-                        <textarea id="reason" placeholder="โปรดระบุเหตุผลการลา..." required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>เบอร์โทรศัพท์ที่สามารถติดต่อได้ <span class="required">*</span></label>
-                        <input type="tel" id="contactPhone" placeholder="เช่น 081-234-5678" required pattern="[0-9-]+" maxlength="12">
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary" onclick="resetLeaveForm()">ล้างข้อมูล</button>
-                        <button type="submit" class="btn btn-primary">ส่งใบลา</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Official Trip Section -->
+            <!-- Official Trip Section -->
         <div class="content-section" id="official-trip-section">
             <div class="page-header">
                 <h1 class="page-title">🚗 แจ้งไปราชการ</h1>
