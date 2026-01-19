@@ -925,6 +925,53 @@
     </div>
     </div>
 
+    <!-- Edit Leave Modal -->
+    <div id="editLeaveModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-header">✏️ แก้ไขใบลา</h2>
+            <form id="editLeaveForm" onsubmit="saveEditedLeave(event)">
+                <input type="hidden" id="editLeaveId">
+                
+                <div class="form-group">
+                    <label>ประเภทการลา <span style="color: var(--danger);">*</span></label>
+                    <select id="editLeaveType" required>
+                        <option value="ลาป่วย">ลาป่วย</option>
+                        <option value="ลาคลอดบุตร">ลาคลอดบุตร</option>
+                        <option value="ลาช่วยเหลือภริยาคลอดบุตร">ลาช่วยเหลือภริยาคลอดบุตร</option>
+                        <option value="ลากิจส่วนตัว">ลากิจส่วนตัว</option>
+                        <option value="ลาพักผ่อน">ลาพักผ่อน</option>
+                        <option value="ลาอุปสมบท">ลาอุปสมบท</option>
+                        <option value="ลาศึกษา">ลาศึกษา</option>
+                        <option value="ลาปฏิบัติงานองค์การระหว่างประเทศ">ลาปฏิบัติงานองค์การระหว่างประเทศ</option>
+                        <option value="ลาฟื้นฟูสมรรถภาพ">ลาฟื้นฟูสมรรถภาพ</option>
+                        <option value="ลาติดตามคู่สมรส">ลาติดตามคู่สมรส</option>
+                        <option value="ลาปฏิบัติงานในหน่วยงานอื่น">ลาปฏิบัติงานในหน่วยงานอื่น</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>วันที่เริ่ม <span style="color: var(--danger);">*</span></label>
+                    <input type="date" id="editStartDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label>วันที่สิ้นสุด <span style="color: var(--danger);">*</span></label>
+                    <input type="date" id="editEndDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label>เหตุผล <span style="color: var(--danger);">*</span></label>
+                    <textarea id="editReason" rows="3" required></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditLeaveModal()">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary">บันทึก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     </div>
 
     <!-- Firebase SDK -->
