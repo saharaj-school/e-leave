@@ -479,6 +479,120 @@
             <!-- Individual Summary Report -->
             <div class="card" style="margin-top: 25px;">
                 <div class="card-header">
+                    <h2 class="card-title">📚 รายงานการอบรม (แยกตามประเภท - ปีงบปัจจุบัน)</h2>
+                </div>
+
+                <!-- Training Statistics -->
+                <div class="stats-overview" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 25px;">
+                    <div class="stat-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-number" id="selfDevCount" style="color: white;">0</div>
+                        <div class="stat-label" style="color: white;">อบรมพัฒนาตนเอง</div>
+                    </div>
+                    <div class="stat-box" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="stat-icon">💼</div>
+                        <div class="stat-number" id="workDevCount" style="color: white;">0</div>
+                        <div class="stat-label" style="color: white;">อบรมเกี่ยวกับงาน</div>
+                    </div>
+                    <div class="stat-box" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <div class="stat-icon">📝</div>
+                        <div class="stat-number" id="otherTrainingCount" style="color: white;">0</div>
+                        <div class="stat-label" style="color: white;">อื่นๆ</div>
+                    </div>
+                </div>
+
+                <!-- Training Type Tabs -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button class="btn" id="trainingTab1" onclick="showTrainingType('selfDev')" style="background: #667eea; color: white;">
+                        📚 อบรมพัฒนาตนเอง
+                    </button>
+                    <button class="btn" id="trainingTab2" onclick="showTrainingType('workDev')" style="background: #f5576c; color: white;">
+                        💼 อบรมเกี่ยวกับงาน
+                    </button>
+                    <button class="btn" id="trainingTab3" onclick="showTrainingType('other')" style="background: #4facfe; color: white;">
+                        📝 อื่นๆ
+                    </button>
+                </div>
+
+                <!-- Training Lists -->
+                <div id="selfDevList" class="training-list" style="display: block;">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">📚 อบรมพัฒนาตนเอง</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ลำดับ</th>
+                                    <th>ชื่อ-นามสกุล</th>
+                                    <th>เรื่อง</th>
+                                    <th>วันที่</th>
+                                    <th>จำนวนวัน</th>
+                                    <th>สถานที่</th>
+                                </tr>
+                            </thead>
+                            <tbody id="selfDevTableBody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-light);">
+                                        กำลังโหลดข้อมูล...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="workDevList" class="training-list" style="display: none;">
+                    <h3 style="color: #f5576c; margin-bottom: 15px;">💼 อบรมพัฒนาเกี่ยวกับงานที่รับผิดชอบ</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ลำดับ</th>
+                                    <th>ชื่อ-นามสกุล</th>
+                                    <th>เรื่อง</th>
+                                    <th>วันที่</th>
+                                    <th>จำนวนวัน</th>
+                                    <th>สถานที่</th>
+                                </tr>
+                            </thead>
+                            <tbody id="workDevTableBody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-light);">
+                                        กำลังโหลดข้อมูล...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="otherTrainingList" class="training-list" style="display: none;">
+                    <h3 style="color: #4facfe; margin-bottom: 15px;">📝 อื่นๆ</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ลำดับ</th>
+                                    <th>ชื่อ-นามสกุล</th>
+                                    <th>เรื่อง</th>
+                                    <th>วันที่</th>
+                                    <th>จำนวนวัน</th>
+                                    <th>สถานที่</th>
+                                </tr>
+                            </thead>
+                            <tbody id="otherTrainingTableBody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-light);">
+                                        กำลังโหลดข้อมูล...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 25px;">
+                <div class="card-header">
                     <h2 class="card-title">🚗⏰ รายงานการไปราชการและเข้าสาย (รายบุคคล)</h2>
                 </div>
 

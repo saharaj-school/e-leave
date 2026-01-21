@@ -1100,88 +1100,6 @@
             }
         }
 
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 9999;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: auto;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            max-width: 600px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            animation: modalSlideIn 0.3s ease-out;
-        }
-
-        @keyframes modalSlideIn {
-            from {
-                transform: translateY(-50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .modal h2 {
-            margin-bottom: 20px;
-            color: var(--primary);
-            font-size: 1.5rem;
-        }
-
-        .modal .form-group {
-            margin-bottom: 20px;
-        }
-
-        .modal .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--text);
-        }
-
-        .modal .form-group input,
-        .modal .form-group select,
-        .modal .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            font-size: 1rem;
-            font-family: 'Kanit', sans-serif;
-            transition: all 0.3s ease;
-        }
-
-        .modal .form-group input:focus,
-        .modal .form-group select:focus,
-        .modal .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .modal .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
@@ -1288,78 +1206,99 @@
         <div class="content-wrapper">
             <!-- Dashboard Section -->
             <div class="content-section active" id="dashboard-section">
-                <div class="page-header">
-                    <h1 class="page-title">📊 สรุปภาพรวม</h1>
-                    <p class="page-subtitle">สถิติการลาและข้อมูลทั่วไป</p>
-                </div>
+            <div class="page-header">
+                <h1 class="page-title">📊 สรุปภาพรวม</h1>
+                <p class="page-subtitle">สถิติการลาและข้อมูลทั่วไป</p>
+            </div>
 
-                <div class="stats-grid" id="leaveStatsGrid">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <div style="margin-top: 15px;">กำลังโหลดข้อมูล...</div>
+            <div class="stats-grid" id="leaveStatsGrid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div style="margin-top: 15px;">กำลังโหลดข้อมูล...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leave Section -->
+        <div class="content-section" id="leave-section">
+            <div class="page-header">
+                <h1 class="page-title">📝 ยื่นใบลา</h1>
+                <p class="page-subtitle">กรอกข้อมูลเพื่อยื่นใบลา</p>
+            </div>
+
+            <div class="alert alert-warning" id="leaveAlert" style="display: none;"></div>
+
+            <div class="card">
+                <form id="leaveForm">
+                    <div class="form-group">
+                        <label>ประเภทการลา <span class="required">*</span></label>
+                        <select id="leaveType" required onchange="handleLeaveTypeChange()">
+                            <option value="">เลือกประเภทการลา</option>
+                            <option value="ลาป่วย">ลาป่วย</option>
+                            <option value="ลาคลอดบุตร">ลาคลอดบุตร</option>
+                            <option value="ลาช่วยเหลือภริยาคลอดบุตร">ลาช่วยเหลือภริยาคลอดบุตร</option>
+                            <option value="ลากิจส่วนตัว">ลากิจส่วนตัว</option>
+                            <option value="ลาพักผ่อน">ลาพักผ่อน</option>
+                            <option value="ลาอุปสมบท">ลาอุปสมบท</option>
+                            <option value="ลาศึกษา">ลาศึกษา</option>
+                            <option value="ลาปฏิบัติงานองค์การระหว่างประเทศ">ลาปฏิบัติงานองค์การระหว่างประเทศ</option>
+                            <option value="ลาฟื้นฟูสมรรถภาพ">ลาฟื้นฟูสมรรถภาพ</option>
+                            <option value="ลาติดตามคู่สมรส">ลาติดตามคู่สมรส</option>
+                            <option value="ลาปฏิบัติงานในหน่วยงานอื่น">ลาปฏิบัติงานในหน่วยงานอื่น</option>
+                        </select>
                     </div>
-                </div>
-            </div>
 
-            <!-- Leave Section -->
-            <div class="content-section" id="leave-section">
-                <div class="page-header">
-                    <h1 class="page-title">📝 ยื่นใบลา</h1>
-                    <p class="page-subtitle">กรอกข้อมูลเพื่อยื่นใบลา</p>
-                </div>
-
-                <div class="alert alert-warning" id="leaveAlert" style="display: none;"></div>
-
-                <div class="card">
-                    <form id="leaveForm">
-                        <div class="form-group">
-                            <label>ประเภทการลา <span class="required">*</span></label>
-                            <select id="leaveType" required onchange="handleLeaveTypeChange()">
-                                <option value="">เลือกประเภทการลา</option>
-                                <option value="ลาป่วย">ลาป่วย</option>
-                                <option value="ลาคลอดบุตร">ลาคลอดบุตร</option>
-                                <option value="ลาช่วยเหลือภริยาคลอดบุตร">ลาช่วยเหลือภริยาคลอดบุตร</option>
-                                <option value="ลากิจส่วนตัว">ลากิจส่วนตัว</option>
-                                <option value="ลาพักผ่อน">ลาพักผ่อน</option>
-                                <option value="ลาอุปสมบท">ลาอุปสมบท</option>
-                                <option value="ลาศึกษา">ลาศึกษา</option>
-                                <option value="ลาปฏิบัติงานองค์การระหว่างประเทศ">ลาปฏิบัติงานองค์การระหว่างประเทศ</option>
-                                <option value="ลาฟื้นฟูสมรรถภาพ">ลาฟื้นฟูสมรรถภาพ</option>
-                                <option value="ลาติดตามคู่สมรส">ลาติดตามคู่สมรส</option>
-                                <option value="ลาปฏิบัติงานในหน่วยงานอื่น">ลาปฏิบัติงานในหน่วยงานอื่น</option>
-                            </select>
-                        </div>
-
-                        <div class="date-range">
-                            <div class="form-group">
-                                <label>วันที่เริ่มต้น <span class="required">*</span></label>
-                                <input type="date" id="startDate" required>
-                            </div>
-                            <div class="form-group">
-                                <label>วันที่สิ้นสุด <span class="required">*</span></label>
-                                <input type="date" id="endDate" required>
+                    <!-- Sick Leave Continuation Notice -->
+                    <div id="sickLeaveContinuationNotice" style="display: none; background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: start; gap: 15px;">
+                            <div style="font-size: 2rem;">🏥</div>
+                            <div style="flex: 1;">
+                                <h3 style="margin: 0 0 10px 0; color: #d97706; font-size: 1.1rem;">พบใบลาป่วยของวันก่อนหน้า</h3>
+                                <div id="previousSickLeaveDetails" style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                                    <!-- จะแสดงรายละเอียดที่นี่ -->
+                                </div>
+                                <p style="margin: 0; color: #92400e; font-weight: 500;">
+                                    💡 คุณสามารถลาป่วยต่อได้ (ไม่นับเป็นครั้งใหม่)
+                                </p>
                             </div>
                         </div>
+                    </div>
 
+                    <div class="date-range">
                         <div class="form-group">
-                            <label>เหตุผลการลา <span class="required">*</span></label>
-                            <textarea id="reason" placeholder="โปรดระบุเหตุผลการลา..." required></textarea>
+                            <label>วันที่เริ่มต้น <span class="required">*</span></label>
+                            <input type="date" id="startDate" required>
                         </div>
-
                         <div class="form-group">
-                            <label>เบอร์โทรศัพท์ที่สามารถติดต่อได้ <span class="required">*</span></label>
-                            <input type="tel" id="contactPhone" placeholder="เช่น 081-234-5678" required pattern="[0-9-]+" maxlength="12">
+                            <label>วันที่สิ้นสุด <span class="required">*</span></label>
+                            <input type="date" id="endDate" required>
                         </div>
+                    </div>
 
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" onclick="resetLeaveForm()">ล้างข้อมูล</button>
-                            <button type="submit" class="btn btn-primary">ส่งใบลา</button>
-                        </div>
-                    </form>
-                </div>
+                    <div class="form-group">
+                        <label>เหตุผลการลา <span class="required">*</span></label>
+                        <textarea id="reason" placeholder="โปรดระบุเหตุผลการลา..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>เบอร์โทรศัพท์ที่สามารถติดต่อได้ <span class="required">*</span></label>
+                        <input type="tel" id="contactPhone" placeholder="เช่น 081-234-5678" required pattern="[0-9-]+" maxlength="12">
+                    </div>
+
+                    <input type="hidden" id="continuationLeaveId" value="">
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="resetLeaveForm()">ล้างข้อมูล</button>
+                        <button type="submit" class="btn btn-primary" id="normalSubmitBtn">ส่งใบลา</button>
+                        <button type="button" class="btn" id="continueSickLeaveBtn" onclick="continueSickLeave()" style="display: none; background: #f59e0b; color: white;">
+                            ➕ ลาป่วยต่อ (วันนี้)
+                        </button>
+                    </div>
+                </form>
             </div>
+        </div>
 
-            <!-- Official Trip Section -->
+        <!-- Official Trip Section -->
         <div class="content-section" id="official-trip-section">
             <div class="page-header">
                 <h1 class="page-title">🚗 แจ้งไปราชการ</h1>
@@ -1368,6 +1307,16 @@
 
             <div class="card">
                 <form id="officialTripForm">
+                    <div class="form-group">
+                        <label>ประเภทการอบรม <span class="required">*</span></label>
+                        <select id="trainingType" required>
+                            <option value="">เลือกประเภทการอบรม</option>
+                            <option value="อบรมพัฒนาตนเอง">อบรมพัฒนาตนเอง</option>
+                            <option value="อบรมพัฒนาเกี่ยวกับงานที่รับผิดชอบ">อบรมพัฒนาเกี่ยวกับงานที่รับผิดชอบ</option>
+                            <option value="อื่นๆ">อื่นๆ</option>
+                        </select>
+                    </div>
+
                     <div class="form-group">
                         <label>เรื่องไปราชการ <span class="required">*</span></label>
                         <input type="text" id="tripSubject" placeholder="เช่น ประชุมเชิงปฏิบัติการ..." required>
@@ -1515,7 +1464,7 @@
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, getDocs, doc, getDoc, updateDoc, deleteDoc, setDoc, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, getDocs, doc, getDoc, updateDoc, setDoc, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyCFyb7qu110Nt2_MhRXK-AlSvu1Hhj2cJU",
@@ -1627,6 +1576,9 @@
             const alertDiv = document.getElementById('leaveAlert');
             
             if (leaveType === 'ลาป่วย') {
+                // Check for previous sick leave
+                checkPreviousSickLeave();
+                
                 // ลาป่วย: can only select today, must be before 8:00 AM
                 const now = new Date();
                 const currentHour = now.getHours();
@@ -1641,22 +1593,179 @@
                 } else {
                     alertDiv.style.display = 'none';
                 }
-            } else if (leaveType === 'ลากิจส่วนตัว') {
-                // ลากิจ: must be at least 3 days in advance
-                const minDate = new Date();
-                minDate.setDate(minDate.getDate() + 3);
-                const minDateStr = minDate.toISOString().split('T')[0];
-                
-                startDateInput.min = minDateStr;
-                startDateInput.max = '';
-                startDateInput.value = '';
-                
-                alertDiv.innerHTML = '<strong>📌 หมายเหตุ:</strong> การลากิจส่วนตัวต้องแจ้งล่วงหน้าอย่างน้อย 3 วัน';
-                alertDiv.style.display = 'block';
             } else {
-                startDateInput.min = today;
-                startDateInput.max = '';
-                alertDiv.style.display = 'none';
+                // Hide continuation notice for non-sick leave
+                document.getElementById('sickLeaveContinuationNotice').style.display = 'none';
+                document.getElementById('continueSickLeaveBtn').style.display = 'none';
+                document.getElementById('normalSubmitBtn').style.display = 'inline-block';
+                document.getElementById('continuationLeaveId').value = '';
+                unlockFormFields();
+                
+                if (leaveType === 'ลากิจส่วนตัว') {
+                    // ลากิจ: must be at least 3 days in advance
+                    const minDate = new Date();
+                    minDate.setDate(minDate.getDate() + 3);
+                    const minDateStr = minDate.toISOString().split('T')[0];
+                    
+                    startDateInput.min = minDateStr;
+                    startDateInput.max = '';
+                    startDateInput.value = '';
+                    
+                    alertDiv.innerHTML = '<strong>📌 หมายเหตุ:</strong> การลากิจส่วนตัวต้องแจ้งล่วงหน้าอย่างน้อย 3 วัน';
+                    alertDiv.style.display = 'block';
+                } else {
+                    startDateInput.min = today;
+                    startDateInput.max = '';
+                    alertDiv.style.display = 'none';
+                }
+            }
+        };
+
+        // Check for previous sick leave (simple version - no complex queries)
+        function checkPreviousSickLeave() {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+            // Simple query - only 2 where clauses
+            const q = query(
+                collection(db, 'leaves'),
+                where('userId', '==', currentUserId),
+                where('type', '==', 'ลาป่วย')
+            );
+
+            getDocs(q).then(snapshot => {
+                let foundContinuation = false;
+                
+                snapshot.forEach(doc => {
+                    const leave = doc.data();
+                    // Check if endDate is yesterday AND status is pending or approved
+                    if (leave.endDate === yesterdayStr && 
+                        (leave.status === 'รออนุมัติ' || leave.status === 'อนุมัติแล้ว')) {
+                        foundContinuation = true;
+                        showContinuationUI(doc.id, leave);
+                    }
+                });
+
+                if (!foundContinuation) {
+                    hideContinuationUI();
+                }
+            }).catch(error => {
+                console.error('Error checking previous sick leave:', error);
+                hideContinuationUI();
+            });
+        }
+
+        // Show continuation UI
+        function showContinuationUI(leaveId, leaveData) {
+            // Show notice
+            document.getElementById('sickLeaveContinuationNotice').style.display = 'block';
+            document.getElementById('continueSickLeaveBtn').style.display = 'inline-block';
+            document.getElementById('normalSubmitBtn').style.display = 'none';
+            document.getElementById('continuationLeaveId').value = leaveId;
+
+            // Show details
+            const startDate = new Date(leaveData.startDate).toLocaleDateString('th-TH', {
+                day: 'numeric', month: 'long', year: 'numeric'
+            });
+            const endDate = new Date(leaveData.endDate).toLocaleDateString('th-TH', {
+                day: 'numeric', month: 'long', year: 'numeric'
+            });
+
+            let statusColor = leaveData.status === 'อนุมัติแล้ว' ? '#10b981' : '#f59e0b';
+            let statusText = leaveData.status === 'อนุมัติแล้ว' ? '✓ อนุมัติแล้ว' : '⏳ รออนุมัติ';
+
+            document.getElementById('previousSickLeaveDetails').innerHTML = `
+                <div style="display: grid; gap: 8px;">
+                    <div><strong>ประเภท:</strong> ${leaveData.type}</div>
+                    <div><strong>วันที่:</strong> ${startDate} - ${endDate} (${leaveData.days} วัน)</div>
+                    <div><strong>เหตุผล:</strong> ${leaveData.reason}</div>
+                    <div><strong>สถานะ:</strong> <span style="color: ${statusColor}; font-weight: 600;">${statusText}</span></div>
+                </div>
+            `;
+
+            // Lock and fill form
+            document.getElementById('reason').value = leaveData.reason;
+            document.getElementById('contactPhone').value = leaveData.contactPhone || '';
+            lockFormFields();
+        }
+
+        // Hide continuation UI
+        function hideContinuationUI() {
+            document.getElementById('sickLeaveContinuationNotice').style.display = 'none';
+            document.getElementById('continueSickLeaveBtn').style.display = 'none';
+            document.getElementById('normalSubmitBtn').style.display = 'inline-block';
+            document.getElementById('continuationLeaveId').value = '';
+            unlockFormFields();
+        }
+
+        // Lock form fields
+        function lockFormFields() {
+            document.getElementById('startDate').readOnly = true;
+            document.getElementById('endDate').readOnly = true;
+            document.getElementById('reason').readOnly = true;
+            document.getElementById('contactPhone').readOnly = true;
+        }
+
+        // Unlock form fields
+        function unlockFormFields() {
+            document.getElementById('startDate').readOnly = false;
+            document.getElementById('endDate').readOnly = false;
+            document.getElementById('reason').readOnly = false;
+            document.getElementById('contactPhone').readOnly = false;
+        }
+
+        // Continue sick leave
+        window.continueSickLeave = async function() {
+            const leaveId = document.getElementById('continuationLeaveId').value;
+            if (!leaveId) {
+                alert('❌ ไม่พบข้อมูลใบลาเดิม');
+                return;
+            }
+
+            if (!confirm('ยืนยันลาป่วยต่อ (วันนี้)?\n\n• ไม่นับเป็นครั้งใหม่\n• Admin ต้องอนุมัติใหม่')) {
+                return;
+            }
+
+            try {
+                const leaveRef = doc(db, 'leaves', leaveId);
+                const leaveDoc = await getDoc(leaveRef);
+                const oldLeaveData = leaveDoc.data();
+
+                // Calculate new end date (today)
+                const newEndDate = new Date();
+                newEndDate.setHours(0, 0, 0, 0);
+                const newEndDateStr = newEndDate.toISOString().split('T')[0];
+
+                // Calculate new total days (working days only)
+                const start = new Date(oldLeaveData.startDate);
+                const end = new Date(newEndDateStr);
+                let days = 0;
+                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                    const dayOfWeek = d.getDay();
+                    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                        days++;
+                    }
+                }
+
+                // Update leave request
+                await updateDoc(leaveRef, {
+                    endDate: newEndDateStr,
+                    days: days,
+                    status: 'รออนุมัติ',
+                    isContinuation: true,
+                    continuedDate: new Date().toISOString()
+                });
+
+                alert('✅ ลาป่วยต่อเรียบร้อยแล้ว!\n\nรอผู้อำนวยการอนุมัติ');
+                
+                // Reset
+                resetLeaveForm();
+                loadUserData();
+                loadLeaveHistory();
+            } catch (error) {
+                console.error('Error continuing sick leave:', error);
+                alert('❌ เกิดข้อผิดพลาด: ' + error.message);
             }
         };
 
@@ -1751,6 +1860,7 @@
             const tripData = {
                 userId: currentUserId,
                 userName: currentUserName,
+                trainingType: document.getElementById('trainingType').value,
                 subject: document.getElementById('tripSubject').value,
                 startDate: startDate,
                 endDate: endDate,
@@ -2130,13 +2240,6 @@
                     const pdfButton = leave.status === 'อนุมัติแล้ว' ? 
                         `<button class="btn" style="background: #10b981; margin-top: 10px; font-size: 0.9rem;" onclick="generateMyLeavePDF('${leave.id}')">📄 เอกสาร PDF</button>` : '';
 
-                    // Add Edit and Cancel buttons for pending leaves
-                    const editCancelButtons = leave.status === 'รออนุมัติ' ? 
-                        `<div style="display: flex; gap: 10px; margin-top: 10px;">
-                            <button class="btn" style="background: #f59e0b; font-size: 0.9rem;" onclick="editMyLeave('${leave.id}')">✏️ แก้ไข</button>
-                            <button class="btn" style="background: #ef4444; font-size: 0.9rem;" onclick="cancelMyLeave('${leave.id}')">🗑️ ยกเลิก</button>
-                        </div>` : '';
-
                     return `
                         <div class="history-item">
                             <div class="history-header">
@@ -2151,7 +2254,6 @@
                                 <div><strong>เหตุผล:</strong> ${leave.reason}</div>
                                 ${leave.adminNote ? `<div style="color: var(--danger); margin-top: 8px;"><strong>หมายเหตุ:</strong> ${leave.adminNote}</div>` : ''}
                                 ${pdfButton}
-                                ${editCancelButtons}
                             </div>
                         </div>
                     `;
@@ -2571,209 +2673,6 @@
             }
         }
 
-        // Edit my leave (Teacher)
-        window.editMyLeave = async function(leaveId) {
-            try {
-                const leaveRef = doc(db, 'leaves', leaveId);
-                const leaveDoc = await getDoc(leaveRef);
-                const leaveData = leaveDoc.data();
-
-                // Populate modal
-                document.getElementById('teacherEditLeaveId').value = leaveId;
-                document.getElementById('teacherEditLeaveType').value = leaveData.type;
-                document.getElementById('teacherEditStartDate').value = leaveData.startDate;
-                document.getElementById('teacherEditEndDate').value = leaveData.endDate;
-                document.getElementById('teacherEditReason').value = leaveData.reason;
-
-                // Show modal
-                document.getElementById('teacherEditLeaveModal').style.display = 'flex';
-            } catch (error) {
-                console.error('Error loading leave:', error);
-                alert('❌ เกิดข้อผิดพลาด: ' + error.message);
-            }
-        };
-
-        // Close edit modal
-        window.closeTeacherEditLeaveModal = function() {
-            document.getElementById('teacherEditLeaveModal').style.display = 'none';
-        };
-
-        // Save edited leave (Teacher)
-        window.saveMyEditedLeave = async function(event) {
-            event.preventDefault();
-
-            const leaveId = document.getElementById('teacherEditLeaveId').value;
-            const type = document.getElementById('teacherEditLeaveType').value;
-            const startDate = document.getElementById('teacherEditStartDate').value;
-            const endDate = document.getElementById('teacherEditEndDate').value;
-            const reason = document.getElementById('teacherEditReason').value;
-
-            try {
-                const leaveRef = doc(db, 'leaves', leaveId);
-                const leaveDoc = await getDoc(leaveRef);
-                const oldLeaveData = leaveDoc.data();
-
-                // Calculate new days (excluding weekends)
-                const start = new Date(startDate);
-                const end = new Date(endDate);
-                let days = 0;
-                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                    const dayOfWeek = d.getDay();
-                    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-                        days++;
-                    }
-                }
-
-                // Return old days and deduct new days
-                await returnLeaveDays(oldLeaveData.type, oldLeaveData.days);
-                await deductLeaveDays(type, days);
-
-                // Update leave request
-                await updateDoc(leaveRef, {
-                    type: type,
-                    startDate: startDate,
-                    endDate: endDate,
-                    reason: reason,
-                    days: days,
-                    updatedAt: new Date().toISOString()
-                });
-
-                alert('✅ แก้ไขใบลาเรียบร้อยแล้ว');
-                window.closeTeacherEditLeaveModal();
-                loadUserData();
-                loadLeaveHistory();
-            } catch (error) {
-                console.error('Error updating leave:', error);
-                alert('❌ เกิดข้อผิดพลาด: ' + error.message);
-            }
-        };
-
-        // Cancel my leave (Teacher)
-        window.cancelMyLeave = async function(leaveId) {
-            if (!confirm('ยืนยันการยกเลิกใบลานี้?\n\nวันลาจะถูกคืนให้คุณ')) return;
-
-            try {
-                const leaveRef = doc(db, 'leaves', leaveId);
-                const leaveDoc = await getDoc(leaveRef);
-                const leaveData = leaveDoc.data();
-
-                // Return leave days
-                await returnLeaveDays(leaveData.type, leaveData.days);
-
-                // Delete leave request
-                await deleteDoc(leaveRef);
-
-                alert('✅ ยกเลิกใบลาเรียบร้อยแล้ว');
-                loadUserData();
-                loadLeaveHistory();
-            } catch (error) {
-                console.error('Error canceling leave:', error);
-                alert('❌ เกิดข้อผิดพลาด: ' + error.message);
-            }
-        };
-
-        // Helper: Return leave days
-        async function returnLeaveDays(leaveType, days) {
-            const userRef = doc(db, 'users', currentUserId);
-            const userDoc = await getDoc(userRef);
-            
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-                const updates = {};
-
-                switch(leaveType) {
-                    case 'ลาป่วย':
-                        updates.sickLeaveRemaining = (userData.sickLeaveRemaining || 0) + days;
-                        break;
-                    case 'ลาคลอดบุตร':
-                        updates.maternityLeaveRemaining = (userData.maternityLeaveRemaining || 0) + days;
-                        break;
-                    case 'ลาช่วยเหลือภริยาคลอดบุตร':
-                        updates.helpWifeLeaveRemaining = (userData.helpWifeLeaveRemaining || 0) + days;
-                        break;
-                    case 'ลากิจส่วนตัว':
-                        updates.personalLeaveRemaining = (userData.personalLeaveRemaining || 0) + days;
-                        break;
-                    case 'ลาพักผ่อน':
-                        updates.vacationLeaveRemaining = (userData.vacationLeaveRemaining || 0) + days;
-                        break;
-                    case 'ลาอุปสมบท':
-                        updates.ordinationLeaveRemaining = (userData.ordinationLeaveRemaining || 0) + days;
-                        break;
-                    case 'ลาศึกษา':
-                        updates.studyLeaveRemaining = (userData.studyLeaveRemaining || 0) + days;
-                        break;
-                    case 'ลาปฏิบัติงานองค์การระหว่างประเทศ':
-                        updates.internationalLeaveRemaining = (userData.internationalLeaveRemaining || 0) + days;
-                        break;
-                    case 'ลาฟื้นฟูสมรรถภาพ':
-                        updates.rehabLeaveRemaining = (userData.rehabLeaveRemaining || 0) + days;
-                        break;
-                    case 'ลาติดตามคู่สมรส':
-                        updates.followSpouseLeaveRemaining = (userData.followSpouseLeaveRemaining || 0) + days;
-                        break;
-                    case 'ลาปฏิบัติงานในหน่วยงานอื่น':
-                        updates.workOtherLeaveRemaining = (userData.workOtherLeaveRemaining || 0) + days;
-                        break;
-                }
-
-                if (Object.keys(updates).length > 0) {
-                    await updateDoc(userRef, updates);
-                }
-            }
-        }
-
-        // Helper: Deduct leave days
-        async function deductLeaveDays(leaveType, days) {
-            const userRef = doc(db, 'users', currentUserId);
-            const userDoc = await getDoc(userRef);
-            
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-                const updates = {};
-
-                switch(leaveType) {
-                    case 'ลาป่วย':
-                        updates.sickLeaveRemaining = Math.max(0, (userData.sickLeaveRemaining || 30) - days);
-                        break;
-                    case 'ลาคลอดบุตร':
-                        updates.maternityLeaveRemaining = Math.max(0, (userData.maternityLeaveRemaining || 90) - days);
-                        break;
-                    case 'ลาช่วยเหลือภริยาคลอดบุตร':
-                        updates.helpWifeLeaveRemaining = Math.max(0, (userData.helpWifeLeaveRemaining || 15) - days);
-                        break;
-                    case 'ลากิจส่วนตัว':
-                        updates.personalLeaveRemaining = Math.max(0, (userData.personalLeaveRemaining || 45) - days);
-                        break;
-                    case 'ลาพักผ่อน':
-                        updates.vacationLeaveRemaining = Math.max(0, (userData.vacationLeaveRemaining || 10) - days);
-                        break;
-                    case 'ลาอุปสมบท':
-                        updates.ordinationLeaveRemaining = Math.max(0, (userData.ordinationLeaveRemaining || 120) - days);
-                        break;
-                    case 'ลาศึกษา':
-                        updates.studyLeaveRemaining = Math.max(0, (userData.studyLeaveRemaining || 365) - days);
-                        break;
-                    case 'ลาปฏิบัติงานองค์การระหว่างประเทศ':
-                        updates.internationalLeaveRemaining = Math.max(0, (userData.internationalLeaveRemaining || 730) - days);
-                        break;
-                    case 'ลาฟื้นฟูสมรรถภาพ':
-                        updates.rehabLeaveRemaining = Math.max(0, (userData.rehabLeaveRemaining || 180) - days);
-                        break;
-                    case 'ลาติดตามคู่สมรส':
-                        updates.followSpouseLeaveRemaining = Math.max(0, (userData.followSpouseLeaveRemaining || 365) - days);
-                        break;
-                    case 'ลาปฏิบัติงานในหน่วยงานอื่น':
-                        updates.workOtherLeaveRemaining = Math.max(0, (userData.workOtherLeaveRemaining || 365) - days);
-                        break;
-                }
-
-                if (Object.keys(updates).length > 0) {
-                    await updateDoc(userRef, updates);
-                }
-            }
-        }
-
         // Initialize
         checkAndResetFiscalYear();
         showFiscalYearNotification();
@@ -2840,53 +2739,5 @@
             </div>
         </div>
     </div>
-
-    <!-- Edit Leave Modal for Teacher -->
-    <div id="teacherEditLeaveModal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <h2 style="font-size: 1.5rem; margin-bottom: 20px; color: var(--primary);">✏️ แก้ไขใบลา</h2>
-            <form id="teacherEditLeaveForm" onsubmit="saveMyEditedLeave(event)">
-                <input type="hidden" id="teacherEditLeaveId">
-                
-                <div class="form-group">
-                    <label>ประเภทการลา <span style="color: var(--danger);">*</span></label>
-                    <select id="teacherEditLeaveType" required>
-                        <option value="ลาป่วย">ลาป่วย</option>
-                        <option value="ลาคลอดบุตร">ลาคลอดบุตร</option>
-                        <option value="ลาช่วยเหลือภริยาคลอดบุตร">ลาช่วยเหลือภริยาคลอดบุตร</option>
-                        <option value="ลากิจส่วนตัว">ลากิจส่วนตัว</option>
-                        <option value="ลาพักผ่อน">ลาพักผ่อน</option>
-                        <option value="ลาอุปสมบท">ลาอุปสมบท</option>
-                        <option value="ลาศึกษา">ลาศึกษา</option>
-                        <option value="ลาปฏิบัติงานองค์การระหว่างประเทศ">ลาปฏิบัติงานองค์การระหว่างประเทศ</option>
-                        <option value="ลาฟื้นฟูสมรรถภาพ">ลาฟื้นฟูสมรรถภาพ</option>
-                        <option value="ลาติดตามคู่สมรส">ลาติดตามคู่สมรส</option>
-                        <option value="ลาปฏิบัติงานในหน่วยงานอื่น">ลาปฏิบัติงานในหน่วยงานอื่น</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>วันที่เริ่ม <span style="color: var(--danger);">*</span></label>
-                    <input type="date" id="teacherEditStartDate" required>
-                </div>
-
-                <div class="form-group">
-                    <label>วันที่สิ้นสุด <span style="color: var(--danger);">*</span></label>
-                    <input type="date" id="teacherEditEndDate" required>
-                </div>
-
-                <div class="form-group">
-                    <label>เหตุผล <span style="color: var(--danger);">*</span></label>
-                    <textarea id="teacherEditReason" rows="3" required></textarea>
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="button" class="btn" style="background: #64748b; flex: 1;" onclick="closeTeacherEditLeaveModal()">ยกเลิก</button>
-                    <button type="submit" class="btn" style="background: #3b82f6; flex: 1;">บันทึก</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
 </body>
 </html>
