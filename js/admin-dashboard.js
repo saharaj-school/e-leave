@@ -432,6 +432,37 @@
                     }
                 });
 
+                // Load training statistics by type
+                let selfDevCount = 0;
+                let workDevCount = 0;
+                let otherTrainingCount = 0;
+
+                tripSnapshot.forEach(docSnap => {
+                    const trip = docSnap.data();
+                    const tripDate = trip.startDate ? new Date(trip.startDate) : (trip.date ? new Date(trip.date) : null);
+                    
+                    if (tripDate && tripDate.getFullYear() === currentYear) {
+                        const trainingType = trip.trainingType || 'อื่นๆ';
+                        
+                        if (trainingType === 'อบรมพัฒนาตนเอง') {
+                            selfDevCount++;
+                        } else if (trainingType === 'อบรมพัฒนาเกี่ยวกับงานที่รับผิดชอบ') {
+                            workDevCount++;
+                        } else {
+                            otherTrainingCount++;
+                        }
+                    }
+                });
+
+                // Update training stats
+                const selfDevEl = document.getElementById('selfDevCount');
+                const workDevEl = document.getElementById('workDevCount');
+                const otherTrainingEl = document.getElementById('otherTrainingCount');
+                
+                if (selfDevEl) selfDevEl.textContent = selfDevCount;
+                if (workDevEl) workDevEl.textContent = workDevCount;
+                if (otherTrainingEl) otherTrainingEl.textContent = otherTrainingCount;
+
                 const statBoxes = document.querySelectorAll('.stats-overview .stat-box .stat-number');
                 const statSubnumbers = document.querySelectorAll('.stats-overview .stat-box .stat-subnumber');
                 
@@ -3131,12 +3162,135 @@
             }
         };
 
+        // Show training type
+        window.showTrainingType = function(type) {
+            // Hide all lists
+            document.getElementById('selfDevList').style.display = 'none';
+            document.getElementById('workDevList').style.display = 'none';
+            document.getElementById('otherTrainingList').style.display = 'none';
+
+            // Reset button styles
+            document.getElementById('trainingTab1').style.opacity = '0.6';
+            document.getElementById('trainingTab2').style.opacity = '0.6';
+            document.getElementById('trainingTab3').style.opacity = '0.6';
+
+            // Show selected list and highlight button
+            if (type === 'selfDev') {
+                document.getElementById('selfDevList').style.display = 'block';
+                document.getElementById('trainingTab1').style.opacity = '1';
+            } else if (type === 'workDev') {
+                document.getElementById('workDevList').style.display = 'block';
+                document.getElementById('trainingTab2').style.opacity = '1';
+            } else if (type === 'other') {
+                document.getElementById('otherTrainingList').style.display = 'block';
+                document.getElementById('trainingTab3').style.display = '1';
+            }
+        };
+
+        // Load training reports
+        async function loadTrainingReports() {
+            try {
+                const now = new Date();
+                const currentYear = now.getFullYear();
+                const tripSnapshot = await getDocs(collection(db, 'official_trips'));
+
+                const selfDevData = [];
+                const workDevData = [];
+                const otherData = [];
+
+                tripSnapshot.forEach(docSnap => {
+                    const trip = docSnap.data();
+                    const tripDate = trip.startDate ? new Date(trip.startDate) : (trip.date ? new Date(trip.date) : null);
+
+                    if (tripDate && tripDate.getFullYear() === currentYear) {
+                        const trainingType = trip.trainingType || 'อื่นๆ';
+                        const tripInfo = {
+                            id: docSnap.id,
+                            ...trip
+                        };
+
+                        if (trainingType === 'อบรมพัฒนาตนเอง') {
+                            selfDevData.push(tripInfo);
+                        } else if (trainingType === 'อบรมพัฒนาเกี่ยวกับงานที่รับผิดชอบ') {
+                            workDevData.push(tripInfo);
+                        } else {
+                            otherData.push(tripInfo);
+                        }
+                    }
+                });
+
+                // Populate tables
+                populateTrainingTable('selfDevTableBody', selfDevData);
+                populateTrainingTable('workDevTableBody', workDevData);
+                populateTrainingTable('otherTrainingTableBody', otherData);
+
+            } catch (error) {
+                console.error('Error loading training reports:', error);
+            }
+        }
+
+        function populateTrainingTable(tableBodyId, data) {
+            const tbody = document.getElementById(tableBodyId);
+
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-light);">
+                            ไม่มีข้อมูล
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Sort by date descending
+            data.sort((a, b) => {
+                const dateA = a.startDate ? new Date(a.startDate) : (a.date ? new Date(a.date) : new Date(0));
+                const dateB = b.startDate ? new Date(b.startDate) : (b.date ? new Date(b.date) : new Date(0));
+                return dateB - dateA;
+            });
+
+            tbody.innerHTML = data.map((trip, index) => {
+                const startDate = trip.startDate ? new Date(trip.startDate).toLocaleDateString('th-TH', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                }) : new Date(trip.date).toLocaleDateString('th-TH', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                });
+
+                const endDate = trip.endDate ? ' - ' + new Date(trip.endDate).toLocaleDateString('th-TH', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                }) : '';
+
+                return `
+                    <tr>
+                        <td style="text-align: center;">${index + 1}</td>
+                        <td>${trip.userName || '-'}</td>
+                        <td>${trip.subject || '-'}</td>
+                        <td style="text-align: center;">${startDate}${endDate}</td>
+                        <td style="text-align: center;">${trip.days || 1} วัน</td>
+                        <td>${trip.location || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
         // Wait for DOM to be ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initialize);
         } else {
             initialize();
         }
+
+        // Load training reports on init
+        setTimeout(() => {
+            loadTrainingReports();
+        }, 1000);
 
     } catch (error) {
         console.error('Failed to initialize:', error);
