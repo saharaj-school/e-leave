@@ -1153,8 +1153,8 @@
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <div class="sidebar-title">📋 ระบบการลา</div>
-            <div style="font-size: 0.85rem; color: var(--text-light);">ข้าราชการครู</div>
+            <div class="sidebar-title">📋 ระบบการลา ไปราชการ</div>
+            <div style="font-size: 0.85rem; color: var(--text-light);">สำหรับบุคลากร</div>
         </div>
 
         <div class="user-info-sidebar">
@@ -1174,6 +1174,10 @@
                 <span class="nav-icon">📝</span>
                 <span>ยื่นใบลา</span>
             </div>
+            <div class="nav-item" onclick="showSection('history')">
+                <span class="nav-icon">📜</span>
+                <span>ประวัติการลา</span>
+            </div>
             <div class="nav-item" onclick="showSection('official-trip')">
                 <span class="nav-icon">🚗</span>
                 <span>แจ้งไปราชการ</span>
@@ -1182,17 +1186,13 @@
                 <span class="nav-icon">⏰</span>
                 <span>แจ้งเข้าสายฉุกเฉิน</span>
             </div>
-            <div class="nav-item" onclick="showSection('history')">
-                <span class="nav-icon">📜</span>
-                <span>ประวัติการลา</span>
-            </div>
             <div class="nav-item" onclick="showContactPopup()">
                 <span class="nav-icon">📞</span>
                 <span>ติดต่อเจ้าหน้าที่</span>
             </div>
         </div>
 
-        <button class="logout-btn" onclick="logout()">🚪 ออกจากระบบ</button>
+        <button class="logout-btn" onclick="logout()">ออกจากระบบ</button>
     </div>
 
     <!-- Mobile Overlay -->
