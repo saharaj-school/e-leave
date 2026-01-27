@@ -415,6 +415,92 @@
             color: #92400e;
         }
 
+        /* Edit Modal Styles */
+        .edit-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .edit-modal.show {
+            display: flex;
+        }
+
+        .edit-modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { 
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .edit-modal-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+            color: white;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .edit-modal-header h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .edit-modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .edit-modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .edit-modal-body {
+            padding: 25px;
+        }
+
+        .edit-modal-footer {
+            padding: 20px 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
         /* Mobile Responsive */
         @media (max-width: 768px) {
             body {
@@ -2322,9 +2408,18 @@
                         `;
                     }
                     
-                    // Add PDF button for approved leaves
-                    const pdfButton = leave.status === 'อนุมัติแล้ว' ? 
-                        `<button class="btn" style="background: #10b981; margin-top: 10px; font-size: 0.9rem;" onclick="generateMyLeavePDF('${leave.id}')">📄 เอกสาร PDF</button>` : '';
+                    // Add action buttons based on status
+                    let actionButtons = '';
+                    if (leave.status === 'รออนุมัติ') {
+                        actionButtons = `
+                            <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                                <button class="btn" style="background: #2563eb; font-size: 0.9rem; flex: 1; min-width: 120px;" onclick="openEditLeaveModal('${leave.id}')">✏️ แก้ไข</button>
+                                <button class="btn" style="background: #ef4444; font-size: 0.9rem; flex: 1; min-width: 120px;" onclick="cancelLeave('${leave.id}')">🗑️ ยกเลิก</button>
+                            </div>
+                        `;
+                    } else if (leave.status === 'อนุมัติแล้ว') {
+                        actionButtons = `<button class="btn" style="background: #10b981; margin-top: 10px; font-size: 0.9rem;" onclick="generateMyLeavePDF('${leave.id}')">📄 เอกสาร PDF</button>`;
+                    }
 
                     return `
                         <div class="history-item">
@@ -2340,7 +2435,7 @@
                                 <div><strong>เหตุผล:</strong> ${leave.reason}</div>
                                 ${continuationInfo}
                                 ${leave.adminNote ? `<div style="color: var(--danger); margin-top: 8px;"><strong>หมายเหตุ:</strong> ${leave.adminNote}</div>` : ''}
-                                ${pdfButton}
+                                ${actionButtons}
                             </div>
                         </div>
                     `;
@@ -2708,6 +2803,111 @@
             }
         };
 
+        // Open Edit Leave Modal
+        window.openEditLeaveModal = async function(leaveId) {
+            try {
+                const leaveDoc = await getDoc(doc(db, 'leaves', leaveId));
+                if (!leaveDoc.exists()) {
+                    alert('ไม่พบข้อมูลใบลา');
+                    return;
+                }
+
+                const leave = leaveDoc.data();
+                
+                // ตรวจสอบว่าใบลายังรออนุมัติอยู่หรือไม่
+                if (leave.status !== 'รออนุมัติ') {
+                    alert('ไม่สามารถแก้ไขใบลาที่ไม่ได้อยู่ในสถานะรออนุมัติ');
+                    return;
+                }
+
+                // กรอกข้อมูลในฟอร์มแก้ไข
+                document.getElementById('editLeaveId').value = leaveId;
+                document.getElementById('editLeaveType').value = leave.type;
+                document.getElementById('editLeaveStartDate').value = leave.startDate;
+                document.getElementById('editLeaveEndDate').value = leave.endDate;
+                document.getElementById('editLeaveReason').value = leave.reason;
+                document.getElementById('editLeavePhone').value = leave.phone || '';
+
+                // แสดง modal
+                document.getElementById('editLeaveModal').classList.add('show');
+                document.body.style.overflow = 'hidden';
+            } catch (error) {
+                console.error('Error opening edit modal:', error);
+                alert('เกิดข้อผิดพลาด: ' + error.message);
+            }
+        };
+
+        // Close Edit Leave Modal
+        window.closeEditLeaveModal = function() {
+            document.getElementById('editLeaveModal').classList.remove('show');
+            document.body.style.overflow = '';
+            document.getElementById('editLeaveForm').reset();
+        };
+
+        // Update Leave
+        window.updateLeave = async function() {
+            try {
+                const leaveId = document.getElementById('editLeaveId').value;
+                const type = document.getElementById('editLeaveType').value;
+                const startDate = document.getElementById('editLeaveStartDate').value;
+                const endDate = document.getElementById('editLeaveEndDate').value;
+                const reason = document.getElementById('editLeaveReason').value;
+                const phone = document.getElementById('editLeavePhone').value;
+
+                if (!type || !startDate || !endDate || !reason) {
+                    alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+                    return;
+                }
+
+                if (new Date(endDate) < new Date(startDate)) {
+                    alert('วันที่สิ้นสุดต้องมากกว่าหรือเท่ากับวันที่เริ่มลา');
+                    return;
+                }
+
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+                await updateDoc(doc(db, 'leaves', leaveId), {
+                    type: type,
+                    startDate: startDate,
+                    endDate: endDate,
+                    days: days,
+                    reason: reason,
+                    phone: phone,
+                    updatedAt: new Date().toISOString()
+                });
+
+                alert('แก้ไขใบลาเรียบร้อยแล้ว');
+                closeEditLeaveModal();
+                loadLeaveHistory();
+                loadLeaveStats();
+            } catch (error) {
+                console.error('Error updating leave:', error);
+                alert('เกิดข้อผิดพลาด: ' + error.message);
+            }
+        };
+
+        // Cancel Leave
+        window.cancelLeave = async function(leaveId) {
+            if (!confirm('คุณต้องการยกเลิกใบลานี้หรือไม่?')) {
+                return;
+            }
+
+            try {
+                // Import deleteDoc if not already imported
+                const { deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                
+                await deleteDoc(doc(db, 'leaves', leaveId));
+                alert('ยกเลิกใบลาเรียบร้อยแล้ว');
+                loadLeaveHistory();
+                loadLeaveStats();
+            } catch (error) {
+                console.error('Error canceling leave:', error);
+                alert('เกิดข้อผิดพลาด: ' + error.message);
+            }
+        };
+
         window.showContactPopup = function() {
             const popup = document.getElementById('contactPopup');
             popup.classList.add('show');
@@ -2822,6 +3022,61 @@
             <div class="contact-popup-footer">
                 <button class="contact-popup-close-btn" onclick="closeContactPopup()">
                     ปิด
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Leave Modal -->
+    <div class="edit-modal" id="editLeaveModal">
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <h2>แก้ไขใบลา</h2>
+                <button class="edit-modal-close" onclick="closeEditLeaveModal()">×</button>
+            </div>
+            <div class="edit-modal-body">
+                <form id="editLeaveForm" class="form-grid">
+                    <input type="hidden" id="editLeaveId">
+                    
+                    <div class="form-group">
+                        <label class="form-label">ประเภทการลา</label>
+                        <select id="editLeaveType" class="form-input" required>
+                            <option value="">-- เลือกประเภทการลา --</option>
+                            <option value="ลาป่วย">ลาป่วย</option>
+                            <option value="ลากิจส่วนตัว">ลากิจส่วนตัว</option>
+                            <option value="ลาคลอดบุตร">ลาคลอดบุตร</option>
+                            <option value="ลาอุปสมบท">ลาอุปสมบท</option>
+                            <option value="ลาพักผ่อน">ลาพักผ่อน</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">วันที่เริ่มลา</label>
+                        <input type="date" id="editLeaveStartDate" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">วันที่สิ้นสุด</label>
+                        <input type="date" id="editLeaveEndDate" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">เหตุผลในการลา</label>
+                        <textarea id="editLeaveReason" class="form-input" rows="4" required placeholder="กรุณาระบุเหตุผลในการลา..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">เบอร์โทรติดต่อระหว่างลา</label>
+                        <input type="tel" id="editLeavePhone" class="form-input" placeholder="089-xxx-xxxx">
+                    </div>
+                </form>
+            </div>
+            <div class="edit-modal-footer">
+                <button type="button" class="btn" style="background: #6b7280;" onclick="closeEditLeaveModal()">
+                    ยกเลิก
+                </button>
+                <button type="button" class="btn" style="background: #2563eb;" onclick="updateLeave()">
+                    💾 บันทึกการแก้ไข
                 </button>
             </div>
         </div>
